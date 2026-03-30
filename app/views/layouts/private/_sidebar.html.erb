@@ -76,6 +76,17 @@
         <% end %>
       </li>
 
+      <%# Reports %>
+      <li>
+        <% reports_path = dashboard_reports_path %>
+        <%= link_to reports_path,
+              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(reports_path)}",
+              "data-tip": "Reports" do %>
+          <%= icon "document-chart-bar", library: "heroicons", class: "size-6 shrink-0" %>
+          <span class="is-drawer-close:hidden">Reports</span>
+        <% end %>
+      </li>
+
     </ul>
 
     <%# Bottom: User Info %>

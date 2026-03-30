@@ -32,6 +32,7 @@ Rails.application.routes.draw do
       resources :leads, only: [ :index, :create ]
       resources :activities, only: [ :index, :create ]
       resources :productivities, only: [ :index ]
+      resources :reports, only: [ :index ]
     end
   end
 

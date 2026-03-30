@@ -1,0 +1,222 @@
+<%# app/views/dashboard/reports/index.html.erb %>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-base-content">Weekly Reports</h1>
+      <p class="text-sm text-base-content/50 mt-0.5">Auto-generated weekly summaries</p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to dashboard_reports_path(week_offset: @week_offset - 1),
+            class: "cursor-pointer rounded-md border border-base-300 bg-base-100 px-4 py-2 text-sm text-base-content/60 hover:bg-base-200 transition flex items-center gap-2" do %>
+        <%= icon "arrow-left", library: "heroicons", class: "size-4" %>
+        Prev Week
+      <% end %>
+      <button onclick="window.print()" class="cursor-pointer rounded-md border border-base-300 bg-base-100 px-4 py-2 text-sm text-base-content/60 hover:bg-base-200 transition flex items-center gap-2">
+        <%= icon "arrow-down-tray", library: "heroicons", class: "size-4" %>
+        CSV
+      </button>
+      <button onclick="window.print()" class="cursor-pointer rounded-md border border-base-300 bg-base-100 px-4 py-2 text-sm text-base-content/60 hover:bg-base-200 transition flex items-center gap-2">
+        <%= icon "printer", library: "heroicons", class: "size-4" %>
+        Print
+      </button>
+    </div>
+  </div>
+
+  <%# Week Banner %>
+  <div class="card bg-base-100 border border-base-300 mb-5">
+    <div class="card-body p-4 flex-row items-center gap-3">
+      <p class="text-sm font-medium text-base-content">
+        Week of <%= @week_start.strftime("%A, %B %-d") %> — <%= @week_end.strftime("%A, %B %-d, %Y") %>
+      </p>
+      <% if @is_current %>
+        <span class="badge badge-primary badge-sm">Current</span>
+      <% end %>
+      <% unless @week_offset == 0 %>
+        <%= link_to "Back to current", dashboard_reports_path(week_offset: 0),
+              class: "ml-auto text-xs text-primary hover:underline" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# KPI Cards %>
+  <div class="grid grid-cols-4 gap-3 mb-5">
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5 items-center text-center gap-1">
+        <p class="text-3xl font-bold text-success"><%= @leads_added %></p>
+        <p class="text-sm text-base-content/50">Leads Added</p>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5 items-center text-center gap-1">
+        <p class="text-3xl font-bold text-error"><%= @leads_removed %></p>
+        <p class="text-sm text-base-content/50">Leads Removed</p>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5 items-center text-center gap-1">
+        <p class="text-3xl font-bold text-success"><%= @net_growth %></p>
+        <p class="text-sm text-base-content/50">Net Growth</p>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5 items-center text-center gap-1">
+        <p class="text-3xl font-bold text-primary"><%= @moved_forward %></p>
+        <p class="text-sm text-base-content/50">Moved Forward</p>
+      </div>
+    </div>
+  </div>
+
+  <%# Team Summary + Alerts Row %>
+  <div class="grid grid-cols-3 gap-3 mb-5">
+
+    <%# Team Summary %>
+    <div class="card bg-base-100 border border-base-300 col-span-2">
+      <div class="card-body p-5">
+        <h2 class="font-medium text-base-content mb-4">Team Summary</h2>
+        <% if @team_summary.empty? %>
+          <div class="overflow-x-auto">
+            <table class="table table-sm w-full">
+              <thead>
+                <tr class="border-b border-base-200">
+                  <th class="text-xs text-base-content/40 font-medium">Agent</th>
+                  <th class="text-xs text-base-content/40 font-medium text-center">Added</th>
+                  <th class="text-xs text-base-content/40 font-medium text-center">Removed</th>
+                  <th class="text-xs text-base-content/40 font-medium text-center">Moved</th>
+                  <th class="text-xs text-base-content/40 font-medium text-center">Activities</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="py-10 text-center text-sm text-base-content/30">No data this week</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="overflow-x-auto">
+            <table class="table table-sm w-full">
+              <thead>
+                <tr class="border-b border-base-200">
+                  <th class="text-xs text-base-content/40 font-medium">Agent</th>
+                  <th class="text-xs text-base-content/40 font-medium text-center">Added</th>
+                  <th class="text-xs text-base-content/40 font-medium text-center">Removed</th>
+                  <th class="text-xs text-base-content/40 font-medium text-center">Moved</th>
+                  <th class="text-xs text-base-content/40 font-medium text-center">Activities</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @team_summary.each do |agent| %>
+                  <tr class="border-b border-base-100">
+                    <td class="py-2.5 text-sm text-base-content"><%= agent[:name] %></td>
+                    <td class="py-2.5 text-center text-sm text-success">+<%= agent[:added] %></td>
+                    <td class="py-2.5 text-center text-sm text-error">-<%= agent[:removed] %></td>
+                    <td class="py-2.5 text-center text-sm text-base-content/70"><%= agent[:moved] %></td>
+                    <td class="py-2.5 text-center text-sm text-base-content/70"><%= agent[:activities] %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Right column: Removals + Alerts %>
+    <div class="flex flex-col gap-3">
+
+      <%# Removals by Reason %>
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-5">
+          <h2 class="font-medium text-base-content mb-3">Removals by Reason</h2>
+          <% if @removals_by_reason.empty? %>
+            <p class="text-sm text-base-content/30">No removals this week</p>
+          <% else %>
+            <div class="space-y-2">
+              <% @removals_by_reason.each do |removal| %>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-base-content/70"><%= removal[:reason] %></span>
+                  <span class="text-sm font-medium text-error"><%= removal[:count] %></span>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Alerts %>
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-5">
+          <h2 class="font-medium text-base-content mb-3">Alerts</h2>
+          <div class="space-y-0 divide-y divide-base-200">
+            <% @alerts.each do |alert| %>
+              <div class="flex items-center justify-between py-2.5">
+                <span class="text-sm text-base-content/70"><%= alert[:label] %></span>
+                <span class="text-sm font-bold <%= alert[:color] %>"><%= alert[:count] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <%# Leads Added This Week %>
+  <div class="card bg-base-100 border border-base-300 mb-3">
+    <div class="card-body p-5">
+      <h2 class="font-medium text-base-content mb-4">
+        Leads Added This Week (<%= @leads_added_list.size %>)
+      </h2>
+      <% if @leads_added_list.empty? %>
+        <p class="text-sm text-base-content/30 text-center py-4">None added</p>
+      <% else %>
+        <div class="space-y-2">
+          <% @leads_added_list.each do |lead| %>
+            <div class="flex items-center justify-between py-2 border-b border-base-100">
+              <div class="flex items-center gap-2">
+                <%= icon "exclamation-triangle", library: "heroicons", class: "size-4 text-error" %>
+                <span class="text-sm font-medium text-base-content"><%= lead[:company] %></span>
+                <span class="text-xs text-base-content/50"><%= lead[:contact] %></span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="badge badge-ghost badge-sm"><%= lead[:stage] %></span>
+                <span class="text-xs text-base-content/40"><%= lead[:owner] %></span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Leads Removed This Week %>
+  <div class="card bg-base-100 border border-base-300">
+    <div class="card-body p-5">
+      <h2 class="font-medium text-base-content mb-4">
+        Leads Removed This Week (<%= @leads_removed_list.size %>)
+      </h2>
+      <% if @leads_removed_list.empty? %>
+        <p class="text-sm text-base-content/30 text-center py-4">None removed</p>
+      <% else %>
+        <div class="space-y-2">
+          <% @leads_removed_list.each do |lead| %>
+            <div class="flex items-center justify-between py-2 border-b border-base-100">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-base-content"><%= lead[:company] %></span>
+                <span class="text-xs text-base-content/50"><%= lead[:contact] %></span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-base-content/50"><%= lead[:reason] %></span>
+                <span class="text-xs text-base-content/40"><%= lead[:removed_by] %></span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+</div>
