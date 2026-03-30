@@ -11,4 +11,19 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+  #
+
+  devise_for :users, controllers: {
+    sessions: "users/sessions",
+    registrations: "users/registrations",
+    passwords: "users/passwords"
+  }, path: "", path_names: {
+    sign_in: "sign_in",
+    sign_up: "sign_up",
+    password: "forgot_password/edit"
+  }
+
+  authenticated :user do
+    root to: "dashboard#index", as: :authenticated_root
+  end
 end
