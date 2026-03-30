@@ -87,6 +87,17 @@
         <% end %>
       </li>
 
+      <%# Teams %>
+      <li>
+        <% teams_path = dashboard_teams_path %>
+        <%= link_to teams_path,
+              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(teams_path)}",
+              "data-tip": "Teams" do %>
+          <%= icon "user-group", library: "heroicons", class: "size-6 shrink-0" %>
+          <span class="is-drawer-close:hidden">Teams</span>
+        <% end %>
+      </li>
+
     </ul>
 
     <%# Bottom: User Info %>
