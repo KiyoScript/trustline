@@ -1,0 +1,238 @@
+<%# app/views/dashboard/leads/index.html.erb %>
+
+<% stage_badge = {
+  "Sourced"                 => "badge-ghost",
+  "Contacted"               => "badge-info",
+  "Engaged"                 => "badge-success",
+  "Qualified"               => "badge-primary",
+  "Call Booked"             => "badge-secondary",
+  "Discovery Done"          => "badge-accent",
+  "Proposal Sent"           => "badge-warning",
+  "Negotiation / Follow-up" => "badge-error"
+} %>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-base-content">Leads</h1>
+      <p class="text-sm text-base-content/50 mt-0.5"><%= @leads.size %> records</p>
+    </div>
+    <button
+      onclick="document.getElementById('add_lead_modal').showModal()"
+      class="btn btn-primary btn-sm gap-2">
+      <%= icon "plus", library: "heroicons", class: "size-4" %>
+      Add Lead
+    </button>
+  </div>
+
+  <%# Filters %>
+  <div class="flex items-center gap-3 mb-4">
+    <label class="input input-bordered input-sm flex items-center gap-2 flex-1 max-w-lg bg-base-100">
+      <%= icon "magnifying-glass", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+      <input type="text" placeholder="Search company, contact, email..." class="grow bg-transparent outline-none text-sm" />
+    </label>
+    <select class="select select-bordered select-sm bg-base-100">
+      <option>Active</option>
+      <option>Inactive</option>
+      <option>All</option>
+    </select>
+    <select class="select select-bordered select-sm bg-base-100">
+      <option>All Stages</option>
+      <option>Sourced</option>
+      <option>Contacted</option>
+      <option>Engaged</option>
+      <option>Qualified</option>
+      <option>Call Booked</option>
+      <option>Discovery Done</option>
+      <option>Proposal Sent</option>
+      <option>Negotiation / Follow-up</option>
+    </select>
+    <select class="select select-bordered select-sm bg-base-100">
+      <option>All Sources</option>
+      <option>LinkedIn</option>
+      <option>Apollo</option>
+      <option>Website</option>
+      <option>Referral</option>
+      <option>Manual</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+  <%# Table %>
+  <div class="card bg-base-100 border border-base-300 overflow-x-auto">
+    <table class="table table-sm w-full">
+      <thead>
+        <tr class="border-b border-base-300">
+          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Company</th>
+          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Contact</th>
+          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Stage</th>
+          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Status</th>
+          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Source</th>
+          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Owner</th>
+          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Next Action</th>
+          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @leads.each do |lead| %>
+          <tr class="border-b border-base-200 hover:bg-base-50 transition-colors">
+            <td class="py-3">
+              <div class="flex items-center gap-2">
+                <%= icon "exclamation-triangle", library: "heroicons", class: "size-4 text-error shrink-0" %>
+                <span class="text-sm font-medium text-base-content"><%= lead[:company] %></span>
+              </div>
+            </td>
+            <td class="py-3 text-sm text-base-content/70"><%= lead[:contact] %></td>
+            <td class="py-3">
+              <span class="badge badge-sm badge-outline <%= stage_badge[lead[:stage]] %>">
+                <%= lead[:stage] %>
+              </span>
+            </td>
+            <td class="py-3">
+              <span class="badge badge-sm badge-outline badge-success"><%= lead[:status] %></span>
+            </td>
+            <td class="py-3 text-sm text-base-content/70"><%= lead[:source] %></td>
+            <td class="py-3 text-sm text-base-content/70"><%= lead[:owner] %></td>
+            <td class="py-3 text-sm text-error font-medium"><%= lead[:date] %></td>
+            <td class="py-3">
+              <div class="flex items-center justify-end gap-2">
+                <button class="btn btn-ghost btn-xs btn-circle">
+                  <%= icon "eye", library: "heroicons", class: "size-4 text-base-content/50" %>
+                </button>
+                <button class="btn btn-ghost btn-xs btn-circle">
+                  <%= icon "pencil", library: "heroicons", class: "size-4 text-base-content/50" %>
+                </button>
+                <button class="btn btn-ghost btn-xs btn-circle">
+                  <%= icon "trash", library: "heroicons", class: "size-4 text-error/60" %>
+                </button>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<%# Add Lead Modal %>
+<dialog id="add_lead_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-2xl">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold">Add New Lead</h3>
+      <button onclick="document.getElementById('add_lead_modal').close()" class="btn btn-ghost btn-sm btn-circle">
+        <%= icon "x-mark", library: "heroicons", class: "size-5" %>
+      </button>
+    </div>
+
+    <%= form_with url: dashboard_leads_path, method: :post, class: "space-y-4" do |f| %>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :company_name, "Company Name *", class: "label label-text text-sm" %>
+          <%= f.text_field :company_name, class: "input input-bordered w-full", required: true %>
+        </div>
+        <div class="form-control">
+          <%= f.label :contact_name, "Contact Name *", class: "label label-text text-sm" %>
+          <%= f.text_field :contact_name, class: "input input-bordered w-full", required: true %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :job_title, "Job Title", class: "label label-text text-sm" %>
+          <%= f.text_field :job_title, class: "input input-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :email, "Email", class: "label label-text text-sm" %>
+          <%= f.email_field :email, class: "input input-bordered w-full" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :phone, "Phone", class: "label label-text text-sm" %>
+          <%= f.telephone_field :phone, class: "input input-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :lead_value, "Lead Value ($)", class: "label label-text text-sm" %>
+          <%= f.number_field :lead_value, class: "input input-bordered w-full", min: 0 %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :source, "Source", class: "label label-text text-sm" %>
+          <%= f.select :source,
+            ["LinkedIn", "Apollo", "Website", "Referral", "Manual", "Other"],
+            {},
+            class: "select select-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :industry, "Industry", class: "label label-text text-sm" %>
+          <%= f.select :industry,
+            ["Technology", "Healthcare", "Finance", "Education", "Retail", "Legal", "Real Estate", "Energy", "Other"],
+            { prompt: "Select..." },
+            class: "select select-bordered w-full" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :stage, "Stage", class: "label label-text text-sm" %>
+          <%= f.select :stage,
+            Dashboard::LeadsController::STAGES,
+            {},
+            class: "select select-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :assigned_to, "Assigned To *", class: "label label-text text-sm" %>
+          <%= f.select :assigned_to,
+            [],
+            { prompt: "Select agent..." },
+            class: "select select-bordered w-full", required: true %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :next_action, "Next Action", class: "label label-text text-sm" %>
+          <%= f.text_field :next_action, class: "input input-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :next_action_date, "Next Action Date", class: "label label-text text-sm" %>
+          <%= f.date_field :next_action_date, class: "input input-bordered w-full" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :last_contact_date, "Last Contact Date", class: "label label-text text-sm" %>
+          <%= f.date_field :last_contact_date, class: "input input-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :tags, "Tags", class: "label label-text text-sm" %>
+          <%= f.text_field :tags, placeholder: "comma separated", class: "input input-bordered w-full" %>
+        </div>
+      </div>
+
+      <div class="form-control">
+        <%= f.label :notes, "Notes", class: "label label-text text-sm" %>
+        <%= f.text_area :notes, rows: 3, class: "textarea textarea-bordered w-full" %>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('add_lead_modal').close()" class="btn btn-ghost btn-sm">
+          Cancel
+        </button>
+        <%= f.submit "Add Lead", class: "btn btn-primary btn-sm" %>
+      </div>
+
+    <% end %>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

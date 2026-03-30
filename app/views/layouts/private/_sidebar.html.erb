@@ -43,6 +43,17 @@
         <% end %>
       </li>
 
+      <%# Leads %>
+      <li>
+        <% leads_path = dashboard_leads_path %>
+        <%= link_to leads_path,
+              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(leads_path)}",
+              "data-tip": "Leads" do %>
+          <%= icon "users", library: "heroicons", class: "size-6 shrink-0" %>
+          <span class="is-drawer-close:hidden">Leads</span>
+        <% end %>
+      </li>
+
     </ul>
 
     <%# Bottom: User Info %>
