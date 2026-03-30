@@ -1,0 +1,53 @@
+<%# app/views/layouts/private/_sidebar.html.erb %>
+<div class="drawer-side z-40">
+  <label for="my-drawer-4" aria-label="close sidebar" class="drawer-overlay"></label>
+  <div class="flex min-h-full flex-col bg-base-100 border-r border-base-300 is-drawer-close:w-16 is-drawer-open:w-64 transition-all duration-200">
+
+    <%# Company / Brand Header %>
+    <div class="flex items-center gap-3 px-3 py-4 border-b border-base-300">
+      <div class="avatar avatar-placeholder shrink-0">
+        <div class="bg-primary text-primary-content rounded-lg size-10">
+          <span class="text-sm font-bold">TVS</span>
+        </div>
+      </div>
+      <div class="is-drawer-close:hidden overflow-hidden">
+        <p class="text-sm font-semibold truncate">TRUSTLINE</p>
+        <p class="text-xs text-base-content/50 truncate">PH</p>
+      </div>
+    </div>
+
+    <%# Nav Links %>
+    <ul class="menu menu-md w-full grow px-2 py-3">
+
+      <%# ── SHARED: Dashboard ── %>
+      <li class="menu-title is-drawer-close:hidden text-xs text-base-content/30 uppercase tracking-widest px-2 mb-1">Main</li>
+      <li>
+        <% home_path = authenticated_root_path %>
+        <%= link_to home_path,
+              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(home_path)}",
+              "data-tip": "Dashboard" do %>
+          <%= icon "home", library: "heroicons", class: "size-6 shrink-0" %>
+          <span class="is-drawer-close:hidden">Dashboard</span>
+        <% end %>
+      </li>
+    </ul>
+
+    <%# Bottom: User Info %>
+    <div class="border-t border-base-300 px-3 py-3 flex items-center gap-3">
+      <div class="avatar avatar-placeholder shrink-0">
+        <div class="bg-neutral text-neutral-content rounded-full size-9">
+          <span class="text-xs font-bold">
+            <%= current_user.email.first.upcase %>
+          </span>
+        </div>
+      </div>
+      <div class="is-drawer-close:hidden overflow-hidden">
+        <p class="text-xs font-medium truncate">
+          <%= current_user.email %>
+        </p>
+        <p class="text-xs text-base-content/50 capitalize">Agent</p>
+      </div>
+    </div>
+
+  </div>
+</div>

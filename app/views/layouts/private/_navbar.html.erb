@@ -1,0 +1,99 @@
+<%# app/views/layouts/private/_navbar.html.erb %>
+<nav class="navbar bg-base-100 border-b border-base-300 px-4 sticky top-0 z-30">
+
+  <div class="navbar-start">
+    <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost btn-sm">
+      <%= icon "squares-2x2", library: "heroicons", class: "size-6" %>
+    </label>
+    <span class="px-3 text-base font-bold tracking-tight">Trustline Virtual Services</span>
+  </div>
+
+  <div class="navbar-end gap-2">
+
+    <%# Theme Switcher %>
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-square">
+        <%= icon "sun", library: "heroicons", class: "size-6" %>
+      </div>
+      <div tabindex="0" class="dropdown-content mt-2 p-2 shadow-lg bg-base-100 border border-base-300/50 rounded-2xl w-56 z-50">
+        <p class="text-xs font-semibold text-base-content/40 uppercase tracking-widest px-2 py-1 mb-1">Theme</p>
+        <ul class="menu menu-sm max-h-72 overflow-auto flex-nowrap">
+          <% %w[light dark cupcake bumblebee emerald corporate synthwave retro cyberpunk valentine halloween garden forest aqua lofi pastel fantasy wireframe black luxury dracula cmyk autumn business acid lemonade night coffee winter].each do |t| %>
+            <li>
+              <label class="label cursor-pointer justify-between px-2 py-1.5 rounded-lg hover:bg-base-200">
+                <span class="capitalize text-sm"><%= t %></span>
+                <input type="radio"
+                       name="theme-dropdown"
+                       class="radio radio-xs"
+                       value="<%= t %>"
+                       onclick="document.documentElement.setAttribute('data-theme', this.value); localStorage.setItem('hr-theme', this.value)">
+              </label>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+
+    <%# User Dropdown %>
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-sm flex items-center gap-2 pr-2">
+        <div class="avatar avatar-placeholder">
+          <div class="bg-primary text-primary-content rounded-full size-8">
+            <span class="text-sm font-bold">
+              <%= current_user.email.first.upcase %>
+            </span>
+          </div>
+        </div>
+        <div class="hidden sm:flex flex-col items-start leading-none gap-1">
+          <span class="text-sm font-medium">
+            <%= current_user.email %>
+          </span>
+            <span class="badge badge-primary badge-soft badge-xs capitalize">
+              Agent
+            </span>          
+        </div>
+        <%= icon "chevron-down", library: "heroicons", class: "size-4 opacity-50" %>
+      </div>
+
+      <ul tabindex="0" class="dropdown-content menu menu-sm mt-3 p-2 shadow-lg bg-base-100 border border-base-300 rounded-box w-56 z-50">
+        <%# User info header %>
+        <li class="px-3 py-2">
+          <p class="text-xs font-semibold text-base-content/70">
+            current_user.email %>
+          </p>
+          <p class="text-xs text-base-content/40">
+            TRUSTLINE AGENT
+          </p>
+        </li>
+        <div class="divider my-0"></div>
+
+        <li>
+          <%= link_to "#", class: "gap-2" do %>
+            <%= icon "user", library: "heroicons", class: "size-4" %>
+            Profile
+          <% end %>
+        </li>
+
+        <%# Settings — GM and HR only %>
+        <li>
+          <%= link_to "#", class: "gap-2" do %>
+            <%= icon "cog-6-tooth", library: "heroicons", class: "size-4" %>
+            Settings
+          <% end %>
+        </li>
+
+        <div class="divider my-0"></div>
+
+        <li>
+          <%= link_to destroy_user_session_path,
+                data: { turbo_method: :delete },
+                class: "text-error font-medium gap-2" do %>
+            <%= icon "arrow-right-on-rectangle", library: "heroicons", class: "size-5" %>
+            Logout
+          <% end %>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</nav>

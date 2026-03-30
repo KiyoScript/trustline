@@ -1,29 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="light">
   <head>
-    <title><%= content_for(:title) || "Trusline" %></title>
+    <title><%= content_for(:title) || "HR Celutions" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Trusline">
+    <meta name="application-name" content="HR Celutions">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
     <%= yield :head %>
-
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
 
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <script src="https://cdn.jsdelivr.net/npm/@digitalpersona/websdk@1.1.0/dist/websdk.client.ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@digitalpersona/devices@0.2.6/dist/es5.bundles/index.umd.js"></script>
     <%= javascript_importmap_tags %>
+
+    <%# Restore saved theme from localStorage %>
+    <script>
+      const saved = localStorage.getItem('hr-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+    </script>
   </head>
 
   <body>
-    <%= yield %>
+    <%= render "layouts/shared/flash_toasts" %>
+
+    <% if user_signed_in?  %>
+      <div class="drawer lg:drawer-open">
+        <input id="my-drawer-4" type="checkbox" class="drawer-toggle" />
+
+        <div class="drawer-content flex flex-col min-h-screen">
+          <%= render partial: "layouts/private/navbar" %>
+          <main class="flex-1 p-4 md:p-6">
+            <%= yield %>
+          </main>
+        </div>
+
+        <%= render partial: "layouts/private/sidebar" %>
+      </div>
+    <% else %>
+      <main>
+        <%= yield %>
+      </main>
+    <% end %>
   </body>
 </html>

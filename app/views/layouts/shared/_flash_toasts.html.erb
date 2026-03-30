@@ -1,0 +1,15 @@
+<div id="flash-toasts">
+  <% if flash.any? %>
+    <div class="toast toast-top toast-end z-100">
+      <% flash.each do |type, message| %>
+        <% next if type == "import_errors" %>
+        <div data-controller="toast"
+             class="alert <%= flash_class(type) %> shadow-lg flex items-center gap-2">
+          <%= flash_icon(type) %>
+          <span><%= message %></span>
+          <button data-action="click->toast#dismiss" class="btn btn-ghost btn-xs ml-auto">✕</button>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

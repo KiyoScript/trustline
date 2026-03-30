@@ -1,0 +1,12 @@
+<script>
+  (function() {
+    const saved = localStorage.getItem('hr-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+  })();
+
+  // Re-apply after every Turbo navigation
+  document.addEventListener('turbo:load', function() {
+    const saved = localStorage.getItem('hr-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+  });
+</script>

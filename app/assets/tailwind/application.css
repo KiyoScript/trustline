@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap');
+@import "tailwindcss";
+
+*,
+*::before,
+*::after {
+  font-family: 'Bricolage Grotesque', sans-serif;
+}
+
+@source not "./daisyui{,*}.mjs";
+
+@plugin "./daisyui.mjs" {
+  themes: light, dark, cupcake, bumblebee, emerald, corporate, synthwave,
+    retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi,
+    pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn,
+    business, acid, lemonade, night, coffee, winter;
+}
