@@ -1,0 +1,146 @@
+<%# app/views/dashboard/productivities/index.html.erb %>
+
+<% rank_colors = { 1 => "bg-amber-400 text-amber-900", 2 => "bg-gray-300 text-gray-700", 3 => "bg-orange-400 text-orange-900" } %>
+<% bar_colors = ["#378ADD", "#1D9E75", "#7F77DD", "#BA7517", "#D85A30", "#0F6E56", "#A32D2D"] %>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-base-content">Productivity Dashboard</h1>
+      <p class="text-sm text-base-content/50 mt-0.5">Weekly performance by agent</p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "This Week", dashboard_productivities_path(period: "week"),
+            class: "cursor-pointer rounded-md border px-4 py-2 text-sm font-medium transition #{ @period == 'week' ? 'bg-primary text-primary-content border-primary' : 'border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200' }" %>
+      <%= link_to "This Month", dashboard_productivities_path(period: "month"),
+            class: "cursor-pointer rounded-md border px-4 py-2 text-sm font-medium transition #{ @period == 'month' ? 'bg-primary text-primary-content border-primary' : 'border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200' }" %>
+      <%= link_to "This Quarter", dashboard_productivities_path(period: "quarter"),
+            class: "cursor-pointer rounded-md border px-4 py-2 text-sm font-medium transition #{ @period == 'quarter' ? 'bg-primary text-primary-content border-primary' : 'border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200' }" %>
+    </div>
+  </div>
+
+  <%# Top Producer Banner %>
+  <% if @top_producer %>
+    <div class="card bg-gradient-to-r from-blue-50 to-teal-50 border border-blue-100 mb-5">
+      <div class="card-body p-5 flex-row items-center gap-4">
+        <%= icon "trophy", library: "heroicons", class: "size-10 text-primary/40 shrink-0" %>
+        <div>
+          <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium mb-0.5">Top Producer</p>
+          <p class="text-xl font-bold text-base-content"><%= @top_producer[:name] %></p>
+          <p class="text-sm text-base-content/60 mt-0.5">
+            <%= @top_producer[:score] %> pts
+            · <%= @top_producer[:added] %> added
+            · <%= @top_producer[:fwd] %> moved forward
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Leaderboard Table %>
+  <div class="card bg-base-100 border border-base-300 mb-5">
+    <div class="card-body p-5">
+      <h2 class="font-medium text-base-content mb-4">Agent Leaderboard</h2>
+
+      <% if @agents.empty? %>
+        <div class="py-12 text-center text-base-content/30 text-sm">No data for this period</div>
+      <% else %>
+        <div class="overflow-x-auto">
+          <table class="table table-sm w-full">
+            <thead>
+              <tr class="border-b border-base-200">
+                <th class="text-xs text-base-content/40 font-medium w-12">#</th>
+                <th class="text-xs text-base-content/40 font-medium">Agent</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Score</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Added</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Removed</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Net</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Fwd</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Calls</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Proposals</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Won</th>
+                <th class="text-xs text-base-content/40 font-medium text-center">Activities</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @agents.each_with_index do |agent, i| %>
+                <% rank = i + 1 %>
+                <tr class="border-b border-base-100 hover:bg-base-50 transition-colors">
+                  <td class="py-3">
+                    <% if rank_colors[rank] %>
+                      <span class="inline-flex items-center justify-center size-6 rounded-full text-xs font-bold <%= rank_colors[rank] %>">
+                        <%= rank %>
+                      </span>
+                    <% else %>
+                      <span class="text-sm text-base-content/30 pl-1"><%= rank %></span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 text-sm font-medium text-base-content"><%= agent[:name] %></td>
+                  <td class="py-3 text-center">
+                    <span class="text-sm font-bold text-primary"><%= agent[:score] %></span>
+                  </td>
+                  <td class="py-3 text-center text-sm font-medium text-success">+<%= agent[:added] %></td>
+                  <td class="py-3 text-center text-sm font-medium text-error">-<%= agent[:removed] %></td>
+                  <td class="py-3 text-center text-sm font-bold <%= agent[:net] >= 0 ? 'text-base-content' : 'text-error' %>">
+                    <%= agent[:net] >= 0 ? "+#{agent[:net]}" : agent[:net] %>
+                  </td>
+                  <td class="py-3 text-center text-sm text-base-content/70"><%= agent[:fwd] %></td>
+                  <td class="py-3 text-center text-sm text-base-content/70"><%= agent[:calls] %></td>
+                  <td class="py-3 text-center text-sm text-base-content/70"><%= agent[:proposals] %></td>
+                  <td class="py-3 text-center text-sm text-base-content/70"><%= agent[:won] %></td>
+                  <td class="py-3 text-center text-sm text-base-content/70"><%= agent[:activities] %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Productivity Score Chart %>
+  <% if @agents.any? %>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5">
+        <h2 class="font-medium text-base-content mb-4">Productivity Score by Agent</h2>
+        <div style="position:relative; width:100%; height:280px;">
+          <canvas id="productivityChart"></canvas>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+</div>
+
+<% if @agents.any? %>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script>
+    const labels = <%= raw @agents.map { |a| a[:name].split(' ').first + ' ' + (a[:name].split(' ').last[0..2] rescue '') }.to_json %>;
+    const scores = <%= raw @agents.map { |a| a[:score] }.to_json %>;
+    const colors = <%= raw bar_colors.first(@agents.size).to_json %>;
+
+    new Chart(document.getElementById('productivityChart'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: scores,
+          backgroundColor: colors,
+          borderRadius: 4,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#888780', font: { size: 11 } } },
+          y: { grid: { color: 'rgba(136,135,128,0.12)' }, ticks: { color: '#888780', font: { size: 11 } }, beginAtZero: true }
+        }
+      }
+    });
+  </script>
+<% end %>

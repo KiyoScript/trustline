@@ -54,6 +54,28 @@
         <% end %>
       </li>
 
+      <%# Activities %>
+      <li>
+        <% activities_path = dashboard_activities_path %>
+        <%= link_to activities_path,
+              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(activities_path)}",
+              "data-tip": "Activities" do %>
+          <%= icon "bolt", library: "heroicons", class: "size-6 shrink-0" %>
+          <span class="is-drawer-close:hidden">Activities</span>
+        <% end %>
+      </li>
+
+      <%# Productivity %>
+      <li>
+        <% productivity_path = dashboard_productivities_path %>
+        <%= link_to productivity_path,
+              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(productivity_path)}",
+              "data-tip": "Productivity" do %>
+          <%= icon "chart-bar", library: "heroicons", class: "size-6 shrink-0" %>
+          <span class="is-drawer-close:hidden">Productivity</span>
+        <% end %>
+      </li>
+
     </ul>
 
     <%# Bottom: User Info %>

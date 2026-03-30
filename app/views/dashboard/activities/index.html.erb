@@ -1,0 +1,196 @@
+<%# app/views/dashboard/activities/index.html.erb %>
+
+<%
+  type_icons = {
+    "Call"             => { icon: "phone",                     color: "text-blue-500",   bg: "bg-blue-50",   border: "border-blue-200" },
+    "Email"            => { icon: "envelope",                  color: "text-indigo-500", bg: "bg-indigo-50", border: "border-indigo-200" },
+    "LinkedIn Message" => { icon: "chat-bubble-left-ellipsis", color: "text-teal-500",   bg: "bg-teal-50",   border: "border-teal-200" },
+    "Meeting"          => { icon: "user-group",                color: "text-purple-500", bg: "bg-purple-50", border: "border-purple-200" },
+    "Note"             => { icon: "document",                  color: "text-gray-500",   bg: "bg-gray-50",   border: "border-gray-200" },
+    "Proposal Sent"    => { icon: "document-text",             color: "text-amber-500",  bg: "bg-amber-50",  border: "border-amber-200" },
+    "Follow-up"        => { icon: "calendar",                  color: "text-teal-500",   bg: "bg-teal-50",   border: "border-teal-200" },
+  }
+
+  tab_labels = {
+    "Call"             => "Call",
+    "Email"            => "Email",
+    "LinkedIn Message" => "LinkedIn",
+    "Meeting"          => "Meeting",
+    "Note"             => "Note",
+    "Proposal Sent"    => "Proposal",
+    "Follow-up"        => "Follow-up",
+  }
+%>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-base-content">Activity Center</h1>
+      <p class="text-sm text-base-content/50 mt-0.5">Log and track all sales activities</p>
+    </div>
+    <button
+      onclick="document.getElementById('log_activity_modal').showModal()"
+      class="btn btn-primary btn-sm gap-2">
+      <%= icon "plus", library: "heroicons", class: "size-4" %>
+      Log Activity
+    </button>
+  </div>
+
+  <%# This Week / This Month Totals %>
+  <div class="grid grid-cols-2 gap-3 mb-5">
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-4 flex-row items-center justify-between">
+        <div>
+          <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">This week</p>
+          <p class="text-2xl font-bold text-base-content mt-1"><%= @this_week_count %></p>
+        </div>
+        <%= icon "calendar-days", library: "heroicons", class: "size-8 text-primary/30" %>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-4 flex-row items-center justify-between">
+        <div>
+          <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">This month</p>
+          <p class="text-2xl font-bold text-base-content mt-1"><%= @this_month_count %></p>
+        </div>
+        <%= icon "chart-bar", library: "heroicons", class: "size-8 text-success/30" %>
+      </div>
+    </div>
+  </div>
+
+  <%# DaisyUI Native Radio Tabs — no JS needed %>
+  <div class="tabs tabs-border w-full bg-base-100 rounded-xl border border-base-300">
+    <% tab_labels.each_with_index do |(type, label), i| %>
+      <% meta = type_icons[type] %>
+      <% count = @counts[type] || 0 %>
+      <% tab_activities = @activities.select { |a| a[:type] == type } %>
+
+      <label class="tab h-auto py-3 px-2 flex-col gap-1 min-w-0 flex-1">
+        <input type="radio" name="activity_tabs" autocomplete="off" <%= 'checked="checked"' if i == 0 %> />
+        <%= icon meta[:icon], library: "heroicons", class: "size-5 text-base-content/40" %>
+        <span class="text-2xl font-bold text-base-content leading-none"><%= count %></span>
+        <span class="text-xs text-base-content/50"><%= label %></span>
+      </label>
+
+      <div class="tab-content bg-base-200 p-4 w-full">
+
+        <%# Search %>
+        <div class="mb-4">
+          <label class="input input-bordered input-sm flex items-center gap-2 w-full max-w-lg bg-base-100">
+            <%= icon "magnifying-glass", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+            <input type="text" placeholder="Search by company, contact, notes..." class="grow bg-transparent outline-none text-sm" />
+          </label>
+        </div>
+
+        <%# Feed %>
+        <% if tab_activities.empty? %>
+          <div class="card bg-base-100 border border-base-200">
+            <div class="card-body py-12 items-center text-base-content/30 text-sm">
+              No activities found
+            </div>
+          </div>
+        <% else %>
+          <div class="space-y-2">
+            <% tab_activities.each do |activity| %>
+              <div class="card bg-base-100 border border-base-200 hover:border-base-300 transition-all">
+                <div class="card-body p-4">
+                  <div class="flex items-start gap-4">
+                    <div class="shrink-0 mt-0.5">
+                      <div class="size-9 rounded-full <%= meta[:bg] %> border <%= meta[:border] %> flex items-center justify-center">
+                        <%= icon meta[:icon], library: "heroicons", class: "size-4 #{meta[:color]}" %>
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-start justify-between gap-4">
+                        <div>
+                          <p class="text-sm font-semibold text-base-content">
+                            <span class="<%= meta[:color] %>"><%= activity[:type] %></span>
+                            — <span class="font-bold"><%= activity[:company] %></span>
+                            <span class="text-base-content/50 font-normal">(<%= activity[:contact] %>)</span>
+                          </p>
+                          <p class="text-sm text-base-content/60 mt-1"><%= activity[:notes] %></p>
+                          <p class="text-sm font-medium text-base-content mt-1">Result: <%= activity[:result] %></p>
+                          <% if activity[:next_step].present? %>
+                            <p class="text-sm text-primary mt-0.5">
+                              Next: <%= activity[:next_step] %>
+                              <% if activity[:next_date].present? %>· <%= activity[:next_date] %><% end %>
+                            </p>
+                          <% end %>
+                          <p class="text-xs text-base-content/40 mt-1">by <%= activity[:by] %></p>
+                        </div>
+                        <span class="text-sm text-base-content/40 shrink-0 whitespace-nowrap"><%= activity[:date] %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+      </div>
+    <% end %>
+  </div>
+
+</div>
+
+<%# Log Activity Modal %>
+<dialog id="log_activity_modal" class="modal">
+  <div class="modal-box w-11/12 max-w-lg">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold">Log Activity</h3>
+      <button onclick="document.getElementById('log_activity_modal').close()" class="btn btn-ghost btn-sm btn-circle">
+        <%= icon "x-mark", library: "heroicons", class: "size-5" %>
+      </button>
+    </div>
+
+    <%= form_with url: dashboard_activities_path, method: :post, class: "space-y-4" do |f| %>
+
+      <div class="form-control">
+        <%= f.label :lead_id, "Lead *", class: "label label-text text-sm" %>
+        <%= f.select :lead_id, [], { prompt: "Select lead..." }, class: "select select-bordered w-full", required: true %>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :activity_type, "Activity Type", class: "label label-text text-sm" %>
+          <%= f.select :activity_type, Dashboard::ActivitiesController::ACTIVITY_TYPES, {}, class: "select select-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :date, "Date", class: "label label-text text-sm" %>
+          <%= f.date_field :date, value: Date.today, class: "input input-bordered w-full" %>
+        </div>
+      </div>
+
+      <div class="form-control">
+        <%= f.label :result, "Result", class: "label label-text text-sm" %>
+        <%= f.text_field :result, placeholder: "e.g. Positive, call scheduled...", class: "input input-bordered w-full" %>
+      </div>
+
+      <div class="form-control">
+        <%= f.label :notes, "Notes", class: "label label-text text-sm" %>
+        <%= f.text_area :notes, rows: 3, class: "textarea textarea-bordered w-full" %>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :next_step, "Next Step", class: "label label-text text-sm" %>
+          <%= f.text_field :next_step, class: "input input-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :next_step_date, "Next Step Date", class: "label label-text text-sm" %>
+          <%= f.date_field :next_step_date, class: "input input-bordered w-full" %>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('log_activity_modal').close()" class="btn btn-ghost btn-sm">Cancel</button>
+        <%= f.submit "Log Activity", class: "btn btn-primary btn-sm" %>
+      </div>
+
+    <% end %>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
