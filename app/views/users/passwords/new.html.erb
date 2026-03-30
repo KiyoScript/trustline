@@ -1,16 +1,52 @@
-<h2>Forgot your password?</h2>
+<div class="min-h-screen bg-base-200 flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md">
 
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%= render "users/shared/error_messages", resource: resource %>
+    <%# Logo %>
+    <div class="text-center mb-8">
+      <%= image_tag "TRUSTLINE.jpg", class: "h-20 w-auto block mx-auto mb-4" %>
+      <h1 class="text-3xl font-bold tracking-tight text-base-content">Forgot your password?</h1>
+      <p class="text-base-content/60 mt-1 text-sm">We'll send you a reset link to your email</p>
+    </div>
 
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
+    <%# Card %>
+    <div class="card bg-base-100 shadow-xl border border-base-300">
+      <div class="card-body gap-5">
+
+        <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
+
+          <%# Error messages %>
+          <%= render "users/shared/error_messages", resource: resource %>
+
+          <%# Email field %>
+          <div class="form-control">
+            <%= f.label :email, class: "label" do %>
+              <span class="label-text font-medium">Email address</span>
+            <% end %>
+            <label class="input input-bordered flex items-center gap-2 w-full focus-within:input-primary transition-colors">
+              <%= icon "envelope", class: "w-4 h-4 text-base-content/40 shrink-0" %>
+              <%= f.email_field :email,
+                autofocus: true,
+                autocomplete: "email",
+                placeholder: "you@example.com",
+                class: "grow bg-transparent outline-none min-w-0" %>
+            </label>
+          </div>
+
+          <%# Submit button %>
+          <div class="form-control mt-2">
+            <%= f.submit "Send reset instructions",
+              class: "btn btn-primary w-full text-base font-semibold tracking-wide" %>
+          </div>
+
+        <% end %>
+
+      </div>
+    </div>
+
+    <%# Footer links %>
+    <div class="text-center mt-6 text-sm text-base-content/60">
+      <%= render "users/shared/links" %>
+    </div>
+
   </div>
-
-  <div class="actions">
-    <%= f.submit "Send me password reset instructions" %>
-  </div>
-<% end %>
-
-<%= render "users/shared/links" %>
+</div>
