@@ -1,4 +1,320 @@
-<button
-  class="inline-block cursor-pointer rounded-md bg-gray-800 px-4 py-3 text-center text-sm font-semibold uppercase text-white transition duration-200 ease-in-out hover:bg-gray-900">
-  Button
-</button>
+<div class="p-6 space-y-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-base-content">Executive dashboard</h1>
+      <p class="text-sm text-base-content/50 mt-0.5">Week of Mar 30 — Apr 5, 2026</p>
+    </div>
+    <div class="flex gap-2">
+      <button class="cursor-pointer rounded-md border border-base-300 bg-transparent px-4 py-2 text-sm text-base-content/60 transition duration-200 ease-in-out hover:bg-base-300 active:scale-95">
+        Weekly summary
+      </button>
+      <button class="cursor-pointer rounded-md border border-base-300 bg-transparent px-4 py-2 text-sm text-base-content/60 transition duration-200 ease-in-out hover:bg-base-300 active:scale-95">
+        Prioritize actions
+      </button>
+    </div>
+  </div>
+
+  <%# KPI Row 1 %>
+  <div class="grid grid-cols-5 gap-3">
+    <div class="card bg-info/10 border border-info/20">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-info/70 uppercase tracking-wide font-medium">Active leads</p>
+        <p class="text-3xl font-bold text-info">20</p>
+        <div class="h-0.5 w-full bg-info/30 rounded-full"></div>
+      </div>
+    </div>
+    <div class="card bg-success/10 border border-success/20">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-success/70 uppercase tracking-wide font-medium">Added this week</p>
+        <p class="text-3xl font-bold text-success">0</p>
+        <div class="h-0.5 w-0 bg-success/30 rounded-full"></div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Removed this week</p>
+        <p class="text-3xl font-bold text-base-content">0</p>
+        <div class="h-0.5 w-0 bg-base-300 rounded-full"></div>
+      </div>
+    </div>
+    <div class="card bg-success/10 border border-success/20">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-success/70 uppercase tracking-wide font-medium">Net growth</p>
+        <p class="text-3xl font-bold text-success">0</p>
+        <div class="h-0.5 w-0 bg-success/30 rounded-full"></div>
+      </div>
+    </div>
+    <div class="card bg-secondary/10 border border-secondary/20">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-secondary/70 uppercase tracking-wide font-medium">Moved forward</p>
+        <p class="text-3xl font-bold text-secondary">0</p>
+        <div class="h-0.5 w-0 bg-secondary/30 rounded-full"></div>
+      </div>
+    </div>
+  </div>
+
+  <%# KPI Row 2 %>
+  <div class="grid grid-cols-5 gap-3">
+    <div class="card bg-warning/10 border border-warning/20">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-warning/70 uppercase tracking-wide font-medium">Overdue actions</p>
+        <p class="text-3xl font-bold text-warning">20</p>
+        <div class="h-0.5 w-full bg-warning/30 rounded-full"></div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Calls booked</p>
+        <p class="text-3xl font-bold text-base-content">0</p>
+        <div class="h-0.5 w-0 bg-base-300 rounded-full"></div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Proposals sent</p>
+        <p class="text-3xl font-bold text-base-content">0</p>
+        <div class="h-0.5 w-0 bg-base-300 rounded-full"></div>
+      </div>
+    </div>
+    <div class="card bg-success/10 border border-success/20">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-success/70 uppercase tracking-wide font-medium">Won this month</p>
+        <p class="text-3xl font-bold text-success">2</p>
+        <div class="h-0.5 w-2/5 bg-success/40 rounded-full"></div>
+      </div>
+    </div>
+    <div class="card bg-error/10 border border-error/20">
+      <div class="card-body p-4 gap-2">
+        <p class="text-xs text-error/70 uppercase tracking-wide font-medium">Lost this month</p>
+        <p class="text-3xl font-bold text-error">1</p>
+        <div class="h-0.5 w-1/5 bg-error/40 rounded-full"></div>
+      </div>
+    </div>
+  </div>
+
+  <%# Stat Cards Row %>
+  <div class="grid grid-cols-3 gap-3">
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">This week's added leads</p>
+          <p class="text-2xl font-bold text-base-content">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">This week's removed leads</p>
+          <p class="text-2xl font-bold text-base-content">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Top producer this week</p>
+          <p class="text-2xl font-bold text-base-content">—</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Charts Row %>
+  <div class="grid grid-cols-3 gap-3">
+
+    <%# Pipeline Stage Distribution %>
+    <div class="card bg-base-100 border border-base-300 col-span-2">
+      <div class="card-body p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-medium text-base-content">Pipeline stage distribution</h2>
+          <button class="cursor-pointer rounded-md border border-base-300 bg-transparent px-3 py-1.5 text-xs text-base-content/60 transition hover:bg-base-200">
+            Analyze
+          </button>
+        </div>
+        <div class="h-52">
+          <canvas id="pipelineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <%# Productivity by Agent %>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-medium text-base-content">Productivity by agent</h2>
+          <span class="badge badge-ghost badge-sm">This week</span>
+        </div>
+        <div class="flex items-center justify-center h-44 text-sm text-base-content/30">
+          No activity this week
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <%# Conversion Funnel %>
+  <div class="card bg-base-100 border border-base-300">
+    <div class="card-body p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-medium text-base-content">Conversion funnel</h2>
+        <button class="cursor-pointer rounded-md border border-base-300 bg-transparent px-3 py-1.5 text-xs text-base-content/60 transition hover:bg-base-200">
+          Improve funnel
+        </button>
+      </div>
+      <div class="h-48">
+        <canvas id="funnelChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <%# Bottom Lists Row %>
+  <div class="grid grid-cols-3 gap-3">
+
+    <%# Overdue Next Actions %>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Overdue next actions</h2>
+          <span class="text-xl font-bold text-base-content">10</span>
+        </div>
+        <div class="space-y-0 divide-y divide-base-200">
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Pinnacle Health</span>
+            <span class="text-sm text-error">2026-03-18</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">ClearPath Logistics</span>
+            <span class="text-sm text-error">2026-03-27</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Apex Retail Group</span>
+            <span class="text-sm text-error">2026-03-24</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">CloudEdge Systems</span>
+            <span class="text-sm text-error">2026-03-25</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Harborview Legal</span>
+            <span class="text-sm text-error">2026-03-26</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Stagnant Leads 7+ days %>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Stagnant leads (7+ days)</h2>
+          <span class="text-xl font-bold text-base-content">10</span>
+        </div>
+        <div class="space-y-0 divide-y divide-base-200">
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">ClearPath Logistics</span>
+            <span class="text-sm text-base-content/50">11d ago</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">CloudEdge Systems</span>
+            <span class="text-sm text-base-content/50">13d ago</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Summit Education</span>
+            <span class="text-sm text-base-content/50">9d ago</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Acme Corp</span>
+            <span class="text-sm text-base-content/50">8d ago</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">TechFlow Inc</span>
+            <span class="text-sm text-base-content/50">10d ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Stagnant Leads 14+ days %>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Stagnant leads (14+ days)</h2>
+          <span class="text-xl font-bold text-base-content">6</span>
+        </div>
+        <div class="space-y-0 divide-y divide-base-200">
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Pinnacle Health</span>
+            <span class="text-sm text-error">16d ago</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Apex Retail Group</span>
+            <span class="text-sm text-error">18d ago</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Skyline Developments</span>
+            <span class="text-sm text-error">20d ago</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Vantage Pharma</span>
+            <span class="text-sm text-error">14d ago</span>
+          </div>
+          <div class="flex items-center justify-between py-2.5">
+            <span class="text-sm text-base-content">Orion Fintech</span>
+            <span class="text-sm text-error">15d ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  const stageLabels = ['Sourced','Contacted','Engaged','Qualified','Call Booked','Discovery','Proposal','Negotiation'];
+  const stageData   = [3, 3, 3, 3, 1, 1, 3, 1];
+  const barColors   = ['#85B7EB','#5DCAA5','#AFA9EC','#EF9F27','#F0997B','#5DCAA5','#ED93B1','#AFA9EC'];
+
+  new Chart(document.getElementById('pipelineChart'), {
+    type: 'bar',
+    data: {
+      labels: stageLabels,
+      datasets: [{ data: stageData, backgroundColor: barColors, borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 40, color: '#888780' } },
+        y: { grid: { color: 'rgba(136,135,128,0.12)' }, ticks: { stepSize: 1, color: '#888780', font: { size: 11 } }, beginAtZero: true }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('funnelChart'), {
+    type: 'line',
+    data: {
+      labels: ['Sourced','Contacted','Engaged','Qualified','Call Booked','Discovery','Proposal','Negotiation','Closed Won','Closed Lost'],
+      datasets: [{
+        data: [3,3,3,3,1,1,3,1,0,0],
+        borderColor: '#534AB7',
+        backgroundColor: 'rgba(83,74,183,0.08)',
+        fill: true, tension: 0.4,
+        pointBackgroundColor: '#534AB7',
+        pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 40, color: '#888780' } },
+        y: { grid: { color: 'rgba(136,135,128,0.12)' }, ticks: { stepSize: 1, color: '#888780', font: { size: 11 } }, beginAtZero: true }
+      }
+    }
+  });
+</script>

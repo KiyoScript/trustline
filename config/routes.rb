@@ -26,6 +26,10 @@ Rails.application.routes.draw do
 
   authenticated :user do
     root to: "dashboard#index", as: :authenticated_root
+
+    namespace :dashboard do
+      resources :pipelines, only: [ :index ]
+    end
   end
 
   unauthenticated do

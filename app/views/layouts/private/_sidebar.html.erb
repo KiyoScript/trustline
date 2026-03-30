@@ -19,8 +19,9 @@
     <%# Nav Links %>
     <ul class="menu menu-md w-full grow px-2 py-3">
 
-      <%# ── SHARED: Dashboard ── %>
       <li class="menu-title is-drawer-close:hidden text-xs text-base-content/30 uppercase tracking-widest px-2 mb-1">Main</li>
+
+      <%# Dashboard %>
       <li>
         <% home_path = authenticated_root_path %>
         <%= link_to home_path,
@@ -30,6 +31,18 @@
           <span class="is-drawer-close:hidden">Dashboard</span>
         <% end %>
       </li>
+
+      <%# Pipeline %>
+      <li>
+        <% pipeline_path = dashboard_pipelines_path %>
+        <%= link_to pipeline_path,
+              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(pipeline_path)}",
+              "data-tip": "Pipeline" do %>
+          <%= icon "view-columns", library: "heroicons", class: "size-6 shrink-0" %>
+          <span class="is-drawer-close:hidden">Pipeline</span>
+        <% end %>
+      </li>
+
     </ul>
 
     <%# Bottom: User Info %>
