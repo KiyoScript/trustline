@@ -1,15 +1,22 @@
 <% if resource.errors.any? %>
-  <div id="error_explanation" data-turbo-temporary>
-    <h2>
-      <%= I18n.t("errors.messages.not_saved",
-                 count: resource.errors.count,
-                 resource: resource.class.model_name.human.downcase)
-       %>
-    </h2>
-    <ul>
-      <% resource.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
+  <div class="toast toast-top toast-end z-50" data-controller="toast">
+    <div class="alert alert-error shadow-lg">
+      <div class="flex flex-col items-start gap-1">
+        <div class="flex items-center gap-2">
+          <%= icon "x-circle", library: "heroicons", class: "size-5 shrink-0" %>
+          <span class="font-semibold text-sm">
+            <%= I18n.t("errors.messages.not_saved",
+                  count: resource.errors.count,
+                  resource: resource.class.model_name.human.downcase) %>
+          </span>
+        </div>
+        <ul class="list-disc list-inside text-sm ml-1">
+          <% resource.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+      <button data-action="click->toast#dismiss" class="btn btn-ghost btn-xs self-start ml-auto">✕</button>
+    </div>
   </div>
 <% end %>
