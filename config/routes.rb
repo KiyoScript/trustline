@@ -34,6 +34,7 @@ Rails.application.routes.draw do
       resources :productivities, only: [ :index ]
       resources :reports, only: [ :index ]
       resources :teams, only: [ :index, :create ]
+      resources :settings, only: [ :index ]
     end
   end
 

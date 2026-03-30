@@ -5,11 +5,7 @@
 
     <%# Company / Brand Header %>
     <div class="flex items-center gap-3 px-3 py-4 border-b border-base-300">
-      <div class="avatar avatar-placeholder shrink-0">
-        <div class="bg-primary text-primary-content rounded-lg size-10">
-          <span class="text-sm font-bold">TVS</span>
-        </div>
-      </div>
+      <%= image_tag "TRUSTLINE.jpg", class: "h-8 w-auto block shrink-0" %>
       <div class="is-drawer-close:hidden overflow-hidden">
         <p class="text-sm font-semibold truncate">TRUSTLINE</p>
         <p class="text-xs text-base-content/50 truncate">PH</p>
@@ -98,9 +94,22 @@
         <% end %>
       </li>
 
+      <div class="divider my-1 is-drawer-close:hidden"></div>
+
+      <%# Settings %>
+      <li>
+        <% settings_path = dashboard_settings_path %>
+        <%= link_to settings_path,
+              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(settings_path)}",
+              "data-tip": "Settings" do %>
+          <%= icon "cog-6-tooth", library: "heroicons", class: "size-6 shrink-0" %>
+          <span class="is-drawer-close:hidden">Settings</span>
+        <% end %>
+      </li>
+
     </ul>
 
-    <%# Bottom: User Info %>
+    <%# Bottom: User Info + Sign Out %>
     <div class="border-t border-base-300 px-3 py-3 flex items-center gap-3">
       <div class="avatar avatar-placeholder shrink-0">
         <div class="bg-neutral text-neutral-content rounded-full size-9">
@@ -109,12 +118,16 @@
           </span>
         </div>
       </div>
-      <div class="is-drawer-close:hidden overflow-hidden">
-        <p class="text-xs font-medium truncate">
-          <%= current_user.email %>
-        </p>
-        <p class="text-xs text-base-content/50 capitalize">Agent</p>
+      <div class="is-drawer-close:hidden overflow-hidden flex-1">
+        <p class="text-xs font-medium truncate"><%= current_user.email %></p>
+        <p class="text-xs text-base-content/50 capitalize"><%= current_user.role rescue "Agent" %></p>
       </div>
+      <%= link_to destroy_user_session_path, method: :delete,
+            class: "is-drawer-close:hidden btn btn-ghost btn-xs btn-circle ml-auto",
+            "data-tip": "Sign out",
+            title: "Sign out" do %>
+        <%= icon "arrow-right-on-rectangle", library: "heroicons", class: "size-4 text-base-content/50" %>
+      <% end %>
     </div>
 
   </div>

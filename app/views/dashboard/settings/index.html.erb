@@ -1,0 +1,259 @@
+<%# app/views/dashboard/settings/index.html.erb %>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-base-content">Settings</h1>
+    <p class="text-sm text-base-content/50 mt-0.5">Manage your account and preferences</p>
+  </div>
+
+  <div class="grid grid-cols-3 gap-6">
+
+    <%# Left Nav %>
+    <div class="col-span-1">
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-2">
+          <ul class="menu menu-sm w-full gap-0.5">
+            <li>
+              <a href="#profile" class="flex items-center gap-3 py-2.5 font-medium">
+                <%= icon "user-circle", library: "heroicons", class: "size-5 text-base-content/50" %>
+                Profile
+              </a>
+            </li>
+            <li>
+              <a href="#password" class="flex items-center gap-3 py-2.5">
+                <%= icon "lock-closed", library: "heroicons", class: "size-5 text-base-content/50" %>
+                Password
+              </a>
+            </li>
+            <li>
+              <a href="#notifications" class="flex items-center gap-3 py-2.5">
+                <%= icon "bell", library: "heroicons", class: "size-5 text-base-content/50" %>
+                Notifications
+              </a>
+            </li>
+            <li>
+              <a href="#appearance" class="flex items-center gap-3 py-2.5">
+                <%= icon "paint-brush", library: "heroicons", class: "size-5 text-base-content/50" %>
+                Appearance
+              </a>
+            </li>
+            <div class="divider my-1"></div>
+            <li>
+              <a href="#danger" class="flex items-center gap-3 py-2.5 text-error">
+                <%= icon "exclamation-triangle", library: "heroicons", class: "size-5" %>
+                Danger Zone
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <%# Right Content %>
+    <div class="col-span-2 space-y-5">
+
+      <%# Profile Section %>
+      <div id="profile" class="card bg-base-100 border border-base-300">
+        <div class="card-body p-6">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="font-medium text-base-content">Profile</h2>
+              <p class="text-xs text-base-content/50 mt-0.5">Update your personal information</p>
+            </div>
+          </div>
+
+          <%# Avatar %>
+          <div class="flex items-center gap-4 mb-6">
+            <div class="avatar avatar-placeholder">
+              <div class="bg-primary/10 text-primary rounded-full size-16">
+                <span class="text-xl font-bold"><%= current_user.email.first.upcase %></span>
+              </div>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-base-content"><%= current_user.email %></p>
+              <p class="text-xs text-base-content/50 mt-0.5 capitalize"><%= current_user.role rescue "Agent" %></p>
+            </div>
+          </div>
+
+          <%= form_with url: "#", method: :patch, class: "space-y-4" do |f| %>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-control">
+                <%= f.label :first_name, "First Name", class: "label label-text text-sm" %>
+                <%= f.text_field :first_name, placeholder: "Juan", class: "input input-bordered w-full" %>
+              </div>
+              <div class="form-control">
+                <%= f.label :last_name, "Last Name", class: "label label-text text-sm" %>
+                <%= f.text_field :last_name, placeholder: "dela Cruz", class: "input input-bordered w-full" %>
+              </div>
+            </div>
+            <div class="form-control">
+              <%= f.label :email, "Email Address", class: "label label-text text-sm" %>
+              <%= f.email_field :email, value: current_user.email, class: "input input-bordered w-full" %>
+            </div>
+            <div class="form-control">
+              <%= f.label :phone, "Phone Number", class: "label label-text text-sm" %>
+              <%= f.telephone_field :phone, placeholder: "+63 9XX XXX XXXX", class: "input input-bordered w-full" %>
+            </div>
+            <div class="flex justify-end">
+              <%= f.submit "Save Changes", class: "btn btn-primary btn-sm" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Password Section %>
+      <div id="password" class="card bg-base-100 border border-base-300">
+        <div class="card-body p-6">
+          <div class="mb-5">
+            <h2 class="font-medium text-base-content">Password</h2>
+            <p class="text-xs text-base-content/50 mt-0.5">Change your account password</p>
+          </div>
+
+          <%= form_with url: "#", method: :patch, class: "space-y-4" do |f| %>
+            <div class="form-control">
+              <%= f.label :current_password, "Current Password", class: "label label-text text-sm" %>
+              <label class="input input-bordered flex items-center gap-2 w-full focus-within:input-primary transition-colors">
+                <%= icon "lock-closed", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+                <%= f.password_field :current_password, placeholder: "••••••••", class: "grow bg-transparent outline-none min-w-0" %>
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-control">
+                <%= f.label :password, "New Password", class: "label label-text text-sm" %>
+                <label class="input input-bordered flex items-center gap-2 w-full focus-within:input-primary transition-colors">
+                  <%= icon "lock-closed", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+                  <%= f.password_field :password, placeholder: "••••••••", class: "grow bg-transparent outline-none min-w-0" %>
+                </label>
+              </div>
+              <div class="form-control">
+                <%= f.label :password_confirmation, "Confirm Password", class: "label label-text text-sm" %>
+                <label class="input input-bordered flex items-center gap-2 w-full focus-within:input-primary transition-colors">
+                  <%= icon "shield-check", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+                  <%= f.password_field :password_confirmation, placeholder: "••••••••", class: "grow bg-transparent outline-none min-w-0" %>
+                </label>
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <%= f.submit "Update Password", class: "btn btn-primary btn-sm" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Notifications Section %>
+      <div id="notifications" class="card bg-base-100 border border-base-300">
+        <div class="card-body p-6">
+          <div class="mb-5">
+            <h2 class="font-medium text-base-content">Notifications</h2>
+            <p class="text-xs text-base-content/50 mt-0.5">Choose what you want to be notified about</p>
+          </div>
+
+          <div class="space-y-0 divide-y divide-base-200">
+            <% [
+              { label: "Overdue next actions",    desc: "Get notified when a next action is past due",         default: true },
+              { label: "New lead assigned",        desc: "Get notified when a lead is assigned to you",         default: true },
+              { label: "Lead moved forward",       desc: "Get notified when a lead progresses in the pipeline", default: false },
+              { label: "Weekly report summary",    desc: "Receive a weekly summary every Monday morning",        default: true },
+              { label: "Team activity digest",     desc: "Daily digest of your team's activities",              default: false },
+            ].each do |notif| %>
+              <div class="flex items-center justify-between py-3.5">
+                <div>
+                  <p class="text-sm font-medium text-base-content"><%= notif[:label] %></p>
+                  <p class="text-xs text-base-content/50 mt-0.5"><%= notif[:desc] %></p>
+                </div>
+                <input type="checkbox" class="toggle toggle-primary toggle-sm" <%= 'checked' if notif[:default] %> />
+              </div>
+            <% end %>
+          </div>
+
+          <div class="flex justify-end mt-4">
+            <button class="btn btn-primary btn-sm">Save Preferences</button>
+          </div>
+        </div>
+      </div>
+
+      <%# Appearance Section %>
+      <div id="appearance" class="card bg-base-100 border border-base-300">
+        <div class="card-body p-6">
+          <div class="mb-5">
+            <h2 class="font-medium text-base-content">Appearance</h2>
+            <p class="text-xs text-base-content/50 mt-0.5">Customize how the app looks</p>
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text text-sm font-medium">Theme</span>
+            </label>
+            <select class="select select-bordered w-full max-w-xs" onchange="document.documentElement.setAttribute('data-theme', this.value)">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="cupcake">Cupcake</option>
+              <option value="corporate">Corporate</option>
+              <option value="nord">Nord</option>
+              <option value="sunset">Sunset</option>
+            </select>
+            <label class="label">
+              <span class="label-text-alt text-base-content/40">Changes apply instantly as a preview</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <%# Danger Zone %>
+      <div id="danger" class="card bg-base-100 border border-error/30">
+        <div class="card-body p-6">
+          <div class="mb-5">
+            <h2 class="font-medium text-error">Danger Zone</h2>
+            <p class="text-xs text-base-content/50 mt-0.5">Irreversible and destructive actions</p>
+          </div>
+
+          <div class="space-y-0 divide-y divide-base-200">
+            <div class="flex items-center justify-between py-4">
+              <div>
+                <p class="text-sm font-medium text-base-content">Sign out of all devices</p>
+                <p class="text-xs text-base-content/50 mt-0.5">Revoke all active sessions across all devices</p>
+              </div>
+              <button class="btn btn-outline btn-error btn-sm">Sign out all</button>
+            </div>
+            <div class="flex items-center justify-between py-4">
+              <div>
+                <p class="text-sm font-medium text-base-content">Delete account</p>
+                <p class="text-xs text-base-content/50 mt-0.5">Permanently delete your account and all your data</p>
+              </div>
+              <button
+                onclick="document.getElementById('delete_account_modal').showModal()"
+                class="btn btn-error btn-sm">
+                Delete account
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%# Delete Account Confirmation Modal %>
+<dialog id="delete_account_modal" class="modal">
+  <div class="modal-box max-w-sm">
+    <div class="flex flex-col items-center text-center gap-3 mb-5">
+      <div class="size-12 rounded-full bg-error/10 flex items-center justify-center">
+        <%= icon "exclamation-triangle", library: "heroicons", class: "size-6 text-error" %>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-base-content">Delete account?</h3>
+        <p class="text-sm text-base-content/50 mt-1">This action is permanent and cannot be undone. All your data will be lost.</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="document.getElementById('delete_account_modal').close()" class="btn btn-ghost btn-sm flex-1">
+        Cancel
+      </button>
+      <button class="btn btn-error btn-sm flex-1">Yes, delete</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
