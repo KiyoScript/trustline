@@ -1,14 +1,16 @@
 <%# app/views/dashboard/leads/index.html.erb %>
 
 <% stage_badge = {
-  "Sourced"                 => "badge-ghost",
-  "Contacted"               => "badge-info",
-  "Engaged"                 => "badge-success",
-  "Qualified"               => "badge-primary",
-  "Call Booked"             => "badge-secondary",
-  "Discovery Done"          => "badge-accent",
-  "Proposal Sent"           => "badge-warning",
-  "Negotiation / Follow-up" => "badge-error"
+  "sourced"               => "badge-ghost",
+  "contacted"             => "badge-info",
+  "engaged"               => "badge-success",
+  "qualified"             => "badge-primary",
+  "call_booked"           => "badge-secondary",
+  "discovery_done"        => "badge-accent",
+  "proposal_sent"         => "badge-warning",
+  "negotiation_follow_up" => "badge-error",
+  "closed_won"            => "badge-success",
+  "closed_lost"           => "badge-ghost"
 } %>
 
 <div class="p-6 bg-base-200 min-h-screen">
@@ -17,7 +19,7 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-xl font-bold text-base-content">Leads</h1>
-      <p class="text-sm text-base-content/50 mt-0.5"><%= @leads.size %> records</p>
+      <p class="text-sm text-base-content/50 mt-0.5"><%= @pagy.count %> records</p>
     </div>
     <button
       onclick="document.getElementById('add_lead_modal').showModal()"
@@ -27,92 +29,196 @@
     </button>
   </div>
 
-  <%# Filters %>
-  <div class="flex items-center gap-3 mb-4">
-    <label class="input input-bordered input-sm flex items-center gap-2 flex-1 max-w-lg bg-base-100">
-      <%= icon "magnifying-glass", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
-      <input type="text" placeholder="Search company, contact, email..." class="grow bg-transparent outline-none text-sm" />
-    </label>
-    <select class="select select-bordered select-sm bg-base-100">
-      <option>Active</option>
-      <option>Inactive</option>
-      <option>All</option>
-    </select>
-    <select class="select select-bordered select-sm bg-base-100">
-      <option>All Stages</option>
-      <option>Sourced</option>
-      <option>Contacted</option>
-      <option>Engaged</option>
-      <option>Qualified</option>
-      <option>Call Booked</option>
-      <option>Discovery Done</option>
-      <option>Proposal Sent</option>
-      <option>Negotiation / Follow-up</option>
-    </select>
-    <select class="select select-bordered select-sm bg-base-100">
-      <option>All Sources</option>
-      <option>LinkedIn</option>
-      <option>Apollo</option>
-      <option>Website</option>
-      <option>Referral</option>
-      <option>Manual</option>
-      <option>Other</option>
-    </select>
-  </div>
+  <%# Ransack Search + Filters %>
+  <%= search_form_for @query, url: dashboard_leads_path, method: :get, html: { class: "mb-4" } do |f| %>
+    <div class="flex items-center gap-3 flex-wrap">
+      <label class="input input-bordered input-sm flex items-center gap-2 flex-1 min-w-64 bg-base-100">
+        <%= icon "magnifying-glass", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+        <%= f.search_field :company_name_or_contact_name_or_email_cont,
+              placeholder: "Search company, contact, email...",
+              class: "grow bg-transparent outline-none text-sm" %>
+      </label>
+
+      <%= f.select :status_eq,
+            Lead.statuses.keys.map { |s| [s.humanize, s] },
+            { include_blank: "All Statuses" },
+            class: "select select-bordered select-sm bg-base-100" %>
+
+      <%= f.select :stage_eq,
+            Lead.stages.keys.map { |s| [s.humanize.gsub("_", " "), s] },
+            { include_blank: "All Stages" },
+            class: "select select-bordered select-sm bg-base-100" %>
+
+      <%= f.select :source_eq,
+            Lead.sources.keys.map { |s| [s.humanize, s] },
+            { include_blank: "All Sources" },
+            class: "select select-bordered select-sm bg-base-100" %>
+
+      <%= f.submit "Search", class: "btn btn-outline btn-sm" %>
+      <%= link_to "Clear", dashboard_leads_path, class: "btn btn-ghost btn-sm" %>
+    </div>
+  <% end %>
 
   <%# Table %>
-  <div class="card bg-base-100 border border-base-300 overflow-x-auto">
-    <table class="table table-sm w-full">
-      <thead>
-        <tr class="border-b border-base-300">
-          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Company</th>
-          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Contact</th>
-          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Stage</th>
-          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Status</th>
-          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Source</th>
-          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Owner</th>
-          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3">Next Action</th>
-          <th class="text-xs text-base-content/50 font-medium uppercase tracking-wide py-3 text-right">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @leads.each do |lead| %>
-          <tr class="border-b border-base-200 hover:bg-base-50 transition-colors">
-            <td class="py-3">
-              <div class="flex items-center gap-2">
-                <%= icon "exclamation-triangle", library: "heroicons", class: "size-4 text-error shrink-0" %>
-                <span class="text-sm font-medium text-base-content"><%= lead[:company] %></span>
-              </div>
-            </td>
-            <td class="py-3 text-sm text-base-content/70"><%= lead[:contact] %></td>
-            <td class="py-3">
-              <span class="badge badge-sm badge-outline <%= stage_badge[lead[:stage]] %>">
-                <%= lead[:stage] %>
-              </span>
-            </td>
-            <td class="py-3">
-              <span class="badge badge-sm badge-outline badge-success"><%= lead[:status] %></span>
-            </td>
-            <td class="py-3 text-sm text-base-content/70"><%= lead[:source] %></td>
-            <td class="py-3 text-sm text-base-content/70"><%= lead[:owner] %></td>
-            <td class="py-3 text-sm text-error font-medium"><%= lead[:date] %></td>
-            <td class="py-3">
-              <div class="flex items-center justify-end gap-2">
-                <button class="btn btn-ghost btn-xs btn-circle">
-                  <%= icon "eye", library: "heroicons", class: "size-4 text-base-content/50" %>
-                </button>
-                <button class="btn btn-ghost btn-xs btn-circle">
-                  <%= icon "pencil", library: "heroicons", class: "size-4 text-base-content/50" %>
-                </button>
-                <button class="btn btn-ghost btn-xs btn-circle">
-                  <%= icon "trash", library: "heroicons", class: "size-4 text-error/60" %>
-                </button>
-              </div>
-            </td>
-          </tr>
+  <div id="leads-table" class="card bg-base-100 border border-base-300/50 rounded-2xl shadow-sm">
+    <% if @leads.any? %>
+      <div class="overflow-x-auto overflow-y-visible">
+        <table class="table table-pin-rows">
+          <thead class="bg-base-200/50">
+            <tr class="text-base-content/40 text-xs uppercase tracking-wider">
+              <th><%= sort_link(@query, :company_name, "Company", class: "hover:text-base-content transition-colors") %></th>
+              <th>Contact</th>
+              <th>Stage</th>
+              <th>Status</th>
+              <th>Source</th>
+              <th>Owner</th>
+              <th><%= sort_link(@query, :next_action_date, "Next Action", class: "hover:text-base-content transition-colors") %></th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @leads.each do |lead| %>
+              <tr class="hover:bg-base-200/40 transition-colors border-base-300/30">
+                <td>
+                  <div class="flex items-center gap-2">
+                    <% if lead.overdue? %>
+                      <%= icon "exclamation-triangle", library: "heroicons", class: "size-4 text-error shrink-0" %>
+                    <% end %>
+                    <%= link_to lead.company_name, dashboard_lead_path(lead),
+                          class: "font-semibold text-sm hover:text-primary transition-colors" %>
+                    <p class="text-base-content/40 text-xs"><%= lead.industry %></p>
+                  </div>
+                </td>
+                <td class="text-sm text-base-content/60 font-normal"><%= lead.contact_name %></td>
+                <td>
+                  <span class="badge badge-soft badge-sm <%= stage_badge[lead.stage] %>">
+                    <%= lead.stage.humanize.gsub("_", " ") %>
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-soft badge-sm <%= lead.active? ? 'badge-success' : lead.won? ? 'badge-primary' : lead.removed? ? 'badge-ghost' : 'badge-error' %>">
+                    <%= lead.status.humanize %>
+                  </span>
+                </td>
+                <td class="text-sm text-base-content/60 font-normal"><%= lead.source.humanize %></td>
+                <td class="text-sm text-base-content/60 font-normal"><%= lead.owner&.display_name %></td>
+                <td class="text-sm font-normal <%= lead.overdue? ? 'text-error font-medium' : 'text-base-content/60' %>">
+                  <%= lead.next_action_date&.strftime("%b %-d, %Y") || "—" %>
+                </td>
+                <td>
+                  <div class="flex items-center gap-1">
+                    <%= link_to dashboard_lead_path(lead),
+                          class: "btn btn-ghost btn-xs btn-square tooltip",
+                          data: { tip: "View" } do %>
+                      <%= icon "eye", library: "heroicons", class: "size-4" %>
+                    <% end %>
+                    <%= link_to edit_dashboard_lead_path(lead),
+                          class: "btn btn-ghost btn-xs btn-square tooltip",
+                          data: { tip: "Edit" } do %>
+                      <%= icon "pencil-square", library: "heroicons", class: "size-4" %>
+                    <% end %>
+                    <button type="button"
+                            class="btn btn-ghost btn-xs btn-square tooltip text-error"
+                            data-tip="Remove"
+                            onclick="document.getElementById('remove_modal_<%= lead.id %>').showModal()">
+                      <%= icon "trash", library: "heroicons", class: "size-4" %>
+                    </button>
+                  </div>
+
+                  <%# Per-row remove modal %>
+                  <dialog id="remove_modal_<%= lead.id %>" class="modal">
+                    <div class="modal-box max-w-sm">
+                      <h3 class="text-lg font-bold mb-1">Remove lead?</h3>
+                      <p class="text-sm text-base-content/50 mb-4"><%= lead.company_name %> · <%= lead.contact_name %></p>
+                      <%= form_with url: dashboard_lead_path(lead), method: :delete do |f| %>
+                        <%= f.select :removal_reason,
+                              ["Disqualified", "Duplicate", "No Response", "Bad Fit", "Closed Lost", "Invalid Contact", "Other"],
+                              { prompt: "Select reason *" },
+                              class: "select select-bordered w-full mb-4",
+                              name: "removal_reason",
+                              required: true %>
+                        <div class="flex gap-3">
+                          <button type="button" onclick="document.getElementById('remove_modal_<%= lead.id %>').close()" class="btn btn-ghost btn-sm flex-1">Cancel</button>
+                          <%= f.submit "Remove", class: "btn btn-error btn-sm flex-1" %>
+                        </div>
+                      <% end %>
+                    </div>
+                    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+                  </dialog>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <%# Pagy pagination inside card %>
+      <% if @pagy.pages > 1 %>
+        <div class="flex items-center justify-between px-5 py-3 border-t border-base-300/30 shrink-0 bg-base-100">
+          <p class="text-xs text-base-content/40 font-normal">
+            Showing
+            <span class="font-semibold text-base-content/70"><%= (@pagy.page - 1) * @pagy.limit + 1 %>–<%= [@pagy.page * @pagy.limit, @pagy.count].min %></span>
+            of
+            <span class="font-semibold text-base-content/70"><%= @pagy.count %></span>
+            leads
+          </p>
+
+          <div class="join">
+            <% if @pagy.page > 1 %>
+              <%= link_to dashboard_leads_path(query: params[:query]&.to_unsafe_h, page: @pagy.page - 1),
+                    class: "join-item btn btn-sm btn-ghost" do %>
+                <%= icon "chevron-left", library: "heroicons", class: "size-4" %>
+              <% end %>
+            <% else %>
+              <button class="join-item btn btn-sm btn-ghost opacity-30" disabled>
+                <%= icon "chevron-left", library: "heroicons", class: "size-4" %>
+              </button>
+            <% end %>
+
+            <% visible = (1..@pagy.pages).select { |p| p == 1 || p == @pagy.pages || (p - @pagy.page).abs <= 1 } %>
+            <% visible.each_with_index do |p, i| %>
+              <% if i > 0 && p - visible[i - 1] > 1 %>
+                <button class="join-item btn btn-sm btn-ghost btn-disabled" disabled>…</button>
+              <% end %>
+              <%= link_to p, dashboard_leads_path(query: params[:query]&.to_unsafe_h, page: p),
+                    class: "join-item btn btn-sm #{p == @pagy.page ? 'btn-primary' : 'btn-ghost'}" %>
+            <% end %>
+
+            <% if @pagy.page < @pagy.pages %>
+              <%= link_to dashboard_leads_path(query: params[:query]&.to_unsafe_h, page: @pagy.page + 1),
+                    class: "join-item btn btn-sm btn-ghost" do %>
+                <%= icon "chevron-right", library: "heroicons", class: "size-4" %>
+              <% end %>
+            <% else %>
+              <button class="join-item btn btn-sm btn-ghost opacity-30" disabled>
+                <%= icon "chevron-right", library: "heroicons", class: "size-4" %>
+              </button>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+    <% else %>
+      <div class="flex flex-col items-center justify-center text-center py-16">
+        <div class="bg-base-200 rounded-full p-5 size-20 flex items-center justify-center mb-4">
+          <%= icon "users", library: "heroicons", class: "size-9 text-base-content/25" %>
+        </div>
+        <p class="font-bold text-base">
+          <%= params[:query].present? ? "No leads found" : "No leads yet" %>
+        </p>
+        <p class="text-base-content/40 text-sm font-normal mt-1">
+          <%= params[:query].present? ? "Try adjusting your filters" : "Start adding leads to your pipeline" %>
+        </p>
+        <% unless params[:query].present? %>
+          <button
+            onclick="document.getElementById('add_lead_modal').showModal()"
+            class="btn btn-primary btn-sm mt-4 gap-2">
+            <%= icon "plus", library: "heroicons", class: "size-4" %>
+            Add First Lead
+          </button>
         <% end %>
-      </tbody>
-    </table>
+      </div>
+    <% end %>
   </div>
 
 </div>
@@ -127,7 +233,8 @@
       </button>
     </div>
 
-    <%= form_with url: dashboard_leads_path, method: :post, class: "space-y-4" do |f| %>
+    <%= form_with model: [:dashboard, Lead.new], method: :post, class: "space-y-4",
+          data: { controller: "lead-form" } do |f| %>
 
       <div class="grid grid-cols-2 gap-4">
         <div class="form-control">
@@ -157,8 +264,8 @@
           <%= f.telephone_field :phone, class: "input input-bordered w-full" %>
         </div>
         <div class="form-control">
-          <%= f.label :lead_value, "Lead Value ($)", class: "label label-text text-sm" %>
-          <%= f.number_field :lead_value, class: "input input-bordered w-full", min: 0 %>
+          <%= f.label :lead_value_estimate, "Lead Value ($)", class: "label label-text text-sm" %>
+          <%= f.number_field :lead_value_estimate, class: "input input-bordered w-full", min: 0, step: 0.01 %>
         </div>
       </div>
 
@@ -166,16 +273,13 @@
         <div class="form-control">
           <%= f.label :source, "Source", class: "label label-text text-sm" %>
           <%= f.select :source,
-            ["LinkedIn", "Apollo", "Website", "Referral", "Manual", "Other"],
-            {},
-            class: "select select-bordered w-full" %>
+                Lead.sources.keys.map { |s| [s.humanize, s] },
+                {},
+                class: "select select-bordered w-full" %>
         </div>
         <div class="form-control">
           <%= f.label :industry, "Industry", class: "label label-text text-sm" %>
-          <%= f.select :industry,
-            ["Technology", "Healthcare", "Finance", "Education", "Retail", "Legal", "Real Estate", "Energy", "Other"],
-            { prompt: "Select..." },
-            class: "select select-bordered w-full" %>
+          <%= f.text_field :industry, placeholder: "e.g. Healthcare, Technology...", class: "input input-bordered w-full" %>
         </div>
       </div>
 
@@ -183,39 +287,42 @@
         <div class="form-control">
           <%= f.label :stage, "Stage", class: "label label-text text-sm" %>
           <%= f.select :stage,
-            Dashboard::LeadsController::STAGES,
-            {},
-            class: "select select-bordered w-full" %>
+                Lead.stages.keys.map { |s| [s.humanize.gsub("_", " "), s] },
+                {},
+                class: "select select-bordered w-full" %>
         </div>
         <div class="form-control">
-          <%= f.label :assigned_to, "Assigned To *", class: "label label-text text-sm" %>
-          <%= f.select :assigned_to,
-            [],
-            { prompt: "Select agent..." },
-            class: "select select-bordered w-full", required: true %>
+          <%= f.label :assigned_to_id, "Assigned To", class: "label label-text text-sm" %>
+          <%= f.select :assigned_to_id,
+                User.where(active_status: true).map { |u| [u.display_name, u.id] },
+                { prompt: "Select agent..." },
+                class: "select select-bordered w-full" %>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div class="form-control">
-          <%= f.label :next_action, "Next Action", class: "label label-text text-sm" %>
-          <%= f.text_field :next_action, class: "input input-bordered w-full" %>
-        </div>
-        <div class="form-control">
-          <%= f.label :next_action_date, "Next Action Date", class: "label label-text text-sm" %>
-          <%= f.date_field :next_action_date, class: "input input-bordered w-full" %>
-        </div>
-      </div>
-
+      <%# Last Contact Date first — triggers auto-fill %>
       <div class="grid grid-cols-2 gap-4">
         <div class="form-control">
           <%= f.label :last_contact_date, "Last Contact Date", class: "label label-text text-sm" %>
-          <%= f.date_field :last_contact_date, class: "input input-bordered w-full" %>
+          <%= f.date_field :last_contact_date, class: "input input-bordered w-full",
+                data: { "lead-form-target": "lastContactDate", action: "change->lead-form#autoNextActionDate" } %>
         </div>
         <div class="form-control">
-          <%= f.label :tags, "Tags", class: "label label-text text-sm" %>
-          <%= f.text_field :tags, placeholder: "comma separated", class: "input input-bordered w-full" %>
+          <%= f.label :next_action_date, "Next Action Date", class: "label label-text text-sm" %>
+          <%= f.date_field :next_action_date, class: "input input-bordered w-full",
+                data: { "lead-form-target": "nextActionDate" } %>
         </div>
+      </div>
+
+      <%# Next Action text — full width %>
+      <div class="form-control">
+        <%= f.label :next_action, "Next Action", class: "label label-text text-sm" %>
+        <%= f.text_field :next_action, class: "input input-bordered w-full" %>
+      </div>
+
+      <div class="form-control">
+        <%= f.label :tags, "Tags", class: "label label-text text-sm" %>
+        <%= f.text_field :tags, placeholder: "comma separated", class: "input input-bordered w-full" %>
       </div>
 
       <div class="form-control">

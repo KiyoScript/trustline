@@ -1,0 +1,169 @@
+<%# app/views/dashboard/leads/edit.html.erb %>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to dashboard_lead_path(@lead), class: "btn btn-ghost btn-sm btn-circle" do %>
+      <%= icon "arrow-left", library: "heroicons", class: "size-5" %>
+    <% end %>
+    <div>
+      <h1 class="text-xl font-bold text-base-content">Edit Lead</h1>
+      <p class="text-sm text-base-content/50 mt-0.5"><%= @lead.company_name %> · <%= @lead.contact_name %></p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300 w-full">
+    <div class="card-body p-6">
+
+      <%= form_with model: [:dashboard, @lead], method: :patch, class: "space-y-5",
+            data: { controller: "lead-form" } do |f| %>
+
+        <%# Flash errors %>
+        <% if @lead.errors.any? %>
+          <div class="alert alert-error">
+            <ul class="list-disc list-inside text-sm">
+              <% @lead.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="divider text-xs text-base-content/40 uppercase tracking-wide">Basic Info</div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :company_name, "Company Name *", class: "label label-text text-sm" %>
+            <%= f.text_field :company_name, class: "input input-bordered w-full", required: true %>
+          </div>
+          <div class="form-control">
+            <%= f.label :contact_name, "Contact Name *", class: "label label-text text-sm" %>
+            <%= f.text_field :contact_name, class: "input input-bordered w-full", required: true %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :job_title, "Job Title", class: "label label-text text-sm" %>
+            <%= f.text_field :job_title, class: "input input-bordered w-full" %>
+          </div>
+          <div class="form-control">
+            <%= f.label :email, "Email", class: "label label-text text-sm" %>
+            <%= f.email_field :email, class: "input input-bordered w-full" %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :phone, "Phone", class: "label label-text text-sm" %>
+            <%= f.telephone_field :phone, class: "input input-bordered w-full" %>
+          </div>
+          <div class="form-control">
+            <%= f.label :industry, "Industry", class: "label label-text text-sm" %>
+            <%= f.text_field :industry, class: "input input-bordered w-full" %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :lead_value_estimate, "Lead Value ($)", class: "label label-text text-sm" %>
+            <%= f.number_field :lead_value_estimate, class: "input input-bordered w-full", min: 0, step: 0.01 %>
+          </div>
+          <div class="form-control">
+            <%= f.label :source, "Source", class: "label label-text text-sm" %>
+            <%= f.select :source,
+                  Lead.sources.keys.map { |s| [s.humanize, s] },
+                  {},
+                  class: "select select-bordered w-full" %>
+          </div>
+        </div>
+
+        <div class="divider text-xs text-base-content/40 uppercase tracking-wide">Pipeline</div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :stage, "Stage", class: "label label-text text-sm" %>
+            <%= f.select :stage,
+                  Lead.stages.keys.map { |s| [s.humanize.gsub("_", " "), s] },
+                  {},
+                  class: "select select-bordered w-full" %>
+          </div>
+          <div class="form-control">
+            <%= f.label :status, "Status", class: "label label-text text-sm" %>
+            <%= f.select :status,
+                  Lead.statuses.keys.map { |s| [s.humanize, s] },
+                  {},
+                  class: "select select-bordered w-full" %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :owner_id, "Owner *", class: "label label-text text-sm" %>
+            <%= f.select :owner_id,
+                  User.where(active_status: true).map { |u| [u.display_name, u.id] },
+                  {},
+                  class: "select select-bordered w-full" %>
+          </div>
+          <div class="form-control">
+            <%= f.label :assigned_to_id, "Assigned To", class: "label label-text text-sm" %>
+            <%= f.select :assigned_to_id,
+                  User.where(active_status: true).map { |u| [u.display_name, u.id] },
+                  { prompt: "Select agent..." },
+                  class: "select select-bordered w-full" %>
+          </div>
+        </div>
+
+        <div class="divider text-xs text-base-content/40 uppercase tracking-wide">Actions & Dates</div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :last_contact_date, "Last Contact Date", class: "label label-text text-sm" %>
+            <%= f.date_field :last_contact_date, class: "input input-bordered w-full",
+                  data: { "lead-form-target": "lastContactDate", action: "change->lead-form#autoNextActionDate" } %>
+          </div>
+          <div class="form-control">
+            <%= f.label :next_action_date, "Next Action Date", class: "label label-text text-sm" %>
+            <%= f.date_field :next_action_date, class: "input input-bordered w-full",
+                  data: { "lead-form-target": "nextActionDate" } %>
+          </div>
+        </div>
+
+        <div class="form-control">
+          <%= f.label :next_action, "Next Action", class: "label label-text text-sm" %>
+          <%= f.text_field :next_action, class: "input input-bordered w-full" %>
+        </div>
+
+        <div class="divider text-xs text-base-content/40 uppercase tracking-wide">Notes</div>
+
+        <div class="form-control">
+          <%= f.label :notes, "Notes", class: "label label-text text-sm" %>
+          <%= f.text_area :notes, rows: 4, class: "textarea textarea-bordered w-full" %>
+        </div>
+
+        <%# Show removal reason field if status is removed %>
+        <div class="form-control" id="removal_reason_field" style="<%= @lead.removed? ? '' : 'display:none' %>">
+          <%= f.label :removal_reason, "Removal Reason", class: "label label-text text-sm" %>
+          <%= f.select :removal_reason,
+                ["Disqualified", "Duplicate", "No Response", "Bad Fit", "Closed Lost", "Invalid Contact", "Other"],
+                { include_blank: true },
+                class: "select select-bordered w-full" %>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <%= link_to "Cancel", dashboard_lead_path(@lead), class: "btn btn-ghost btn-sm" %>
+          <%= f.submit "Save Changes", class: "btn btn-primary btn-sm" %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelector('select[name="lead[status]"]')?.addEventListener('change', function() {
+    const removalField = document.getElementById('removal_reason_field');
+    removalField.style.display = this.value === 'removed' ? '' : 'none';
+  });
+</script>

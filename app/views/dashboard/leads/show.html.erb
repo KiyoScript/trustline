@@ -1,0 +1,274 @@
+<%# app/views/dashboard/leads/show.html.erb %>
+
+<% stage_badge = {
+  "sourced"               => "badge-ghost",
+  "contacted"             => "badge-info",
+  "engaged"               => "badge-success",
+  "qualified"             => "badge-primary",
+  "call_booked"           => "badge-secondary",
+  "discovery_done"        => "badge-accent",
+  "proposal_sent"         => "badge-warning",
+  "negotiation_follow_up" => "badge-error",
+  "closed_won"            => "badge-success",
+  "closed_lost"           => "badge-ghost"
+} %>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <%= link_to dashboard_leads_path, class: "btn btn-ghost btn-sm btn-circle" do %>
+        <%= icon "arrow-left", library: "heroicons", class: "size-5" %>
+      <% end %>
+      <div>
+        <h1 class="text-xl font-bold text-base-content"><%= @lead.company_name %></h1>
+        <p class="text-sm text-base-content/50 mt-0.5"><%= @lead.contact_name %> · <%= @lead.job_title %></p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to edit_dashboard_lead_path(@lead), class: "btn btn-outline btn-sm gap-2" do %>
+        <%= icon "pencil", library: "heroicons", class: "size-4" %>
+        Edit
+      <% end %>
+      <button
+        onclick="document.getElementById('remove_lead_modal').showModal()"
+        class="btn btn-error btn-outline btn-sm gap-2">
+        <%= icon "trash", library: "heroicons", class: "size-4" %>
+        Remove
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-5">
+
+    <%# Left Column — Lead Info %>
+    <div class="col-span-2 space-y-5">
+
+      <%# Basic Info Card %>
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-5">
+          <div class="flex items-start justify-between mb-4">
+            <h2 class="font-medium text-base-content">Lead Information</h2>
+            <div class="flex gap-2">
+              <span class="badge badge-sm badge-outline <%= stage_badge[@lead.stage] %>">
+                <%= @lead.stage.humanize.gsub("_", " ") %>
+              </span>
+              <span class="badge badge-sm badge-outline <%= @lead.active? ? 'badge-success' : @lead.won? ? 'badge-primary' : 'badge-ghost' %>">
+                <%= @lead.status.humanize %>
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-x-8 gap-y-3">
+            <% [
+              ["Company",       @lead.company_name],
+              ["Contact",       @lead.contact_name],
+              ["Job Title",     @lead.job_title],
+              ["Email",         @lead.email],
+              ["Phone",         @lead.phone],
+              ["Industry",      @lead.industry],
+              ["Source",        @lead.source&.humanize],
+              ["Lead Value",    @lead.lead_value_estimate ? number_to_currency(@lead.lead_value_estimate) : nil],
+              ["Date Added",    @lead.date_added&.strftime("%b %-d, %Y")],
+              ["Last Contact",  @lead.last_contact_date&.strftime("%b %-d, %Y")],
+            ].each do |label, value| %>
+              <% next if value.blank? %>
+              <div>
+                <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium"><%= label %></p>
+                <p class="text-sm text-base-content mt-0.5"><%= value %></p>
+              </div>
+            <% end %>
+          </div>
+
+          <% if @lead.tags.present? && @lead.tags.any? %>
+            <div class="mt-4">
+              <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium mb-2">Tags</p>
+              <div class="flex flex-wrap gap-1">
+                <% @lead.tags.each do |tag| %>
+                  <span class="badge badge-ghost badge-sm"><%= tag %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <% if @lead.notes.present? %>
+            <div class="mt-4">
+              <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium mb-1">Notes</p>
+              <p class="text-sm text-base-content/70 leading-relaxed"><%= @lead.notes %></p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Next Action Card %>
+      <div class="card bg-base-100 border border-base-300 <%= @lead.overdue? ? 'border-error/40' : '' %>">
+        <div class="card-body p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <% if @lead.overdue? %>
+              <%= icon "exclamation-triangle", library: "heroicons", class: "size-5 text-error" %>
+              <h2 class="font-medium text-error">Next Action — OVERDUE</h2>
+            <% else %>
+              <%= icon "calendar", library: "heroicons", class: "size-5 text-base-content/50" %>
+              <h2 class="font-medium text-base-content">Next Action</h2>
+            <% end %>
+          </div>
+          <p class="text-sm text-base-content"><%= @lead.next_action.presence || "—" %></p>
+          <p class="text-sm <%= @lead.overdue? ? 'text-error font-medium' : 'text-base-content/50' %> mt-1">
+            Due: <%= @lead.next_action_date&.strftime("%B %-d, %Y") || "Not set" %>
+          </p>
+        </div>
+      </div>
+
+      <%# Movement History %>
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-5">
+          <h2 class="font-medium text-base-content mb-4">Movement History</h2>
+          <% if @movement_histories.empty? %>
+            <p class="text-sm text-base-content/30 text-center py-6">No history yet</p>
+          <% else %>
+            <div class="space-y-0 divide-y divide-base-100">
+              <% @movement_histories.each do |history| %>
+                <div class="flex items-start gap-3 py-3">
+                  <div class="size-8 rounded-full bg-base-200 flex items-center justify-center shrink-0 mt-0.5">
+                    <span class="text-xs font-bold text-base-content/60">
+                      <%= history.changed_by&.initials %>
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-base-content">
+                      <span class="font-medium"><%= history.changed_by&.display_name %></span>
+                      · <span class="text-base-content/60"><%= history.action_type.humanize %></span>
+                    </p>
+                    <% if history.movement_note.present? %>
+                      <p class="text-xs text-base-content/50 mt-0.5"><%= history.movement_note %></p>
+                    <% end %>
+                    <% if history.moved_stage? && history.previous_stage && history.new_stage %>
+                      <p class="text-xs mt-0.5">
+                        <span class="text-base-content/40"><%= history.previous_stage_label %></span>
+                        <span class="text-base-content/40"> → </span>
+                        <span class="text-primary font-medium"><%= history.new_stage_label %></span>
+                      </p>
+                    <% end %>
+                  </div>
+                  <span class="text-xs text-base-content/30 shrink-0 whitespace-nowrap">
+                    <%= history.timestamp.strftime("%b %-d, %Y") %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+
+    <%# Right Column — Ownership + Quick Stats %>
+    <div class="col-span-1 space-y-4">
+
+      <%# Ownership %>
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-5">
+          <h2 class="font-medium text-base-content mb-4">Ownership</h2>
+          <div class="space-y-3">
+            <% [
+              ["Owner",       @lead.owner],
+              ["Assigned To", @lead.assigned_to],
+              ["Created By",  @lead.created_by],
+              ["Last Updated By", @lead.last_updated_by],
+            ].each do |label, user| %>
+              <% next unless user %>
+              <div>
+                <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium"><%= label %></p>
+                <div class="flex items-center gap-2 mt-1">
+                  <div class="avatar avatar-placeholder">
+                    <div class="bg-primary/10 text-primary rounded-full size-7">
+                      <span class="text-xs font-bold"><%= user.initials %></span>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-base-content"><%= user.display_name %></p>
+                    <p class="text-xs text-base-content/40 capitalize"><%= user.role.humanize %></p>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%# Quick Stats %>
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-5">
+          <h2 class="font-medium text-base-content mb-4">Quick Stats</h2>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-sm text-base-content/50">Stage Moves</span>
+              <span class="text-sm font-medium text-base-content">
+                <%= @movement_histories.count(&:moved_stage?) %>
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-base-content/50">Days Since Contact</span>
+              <span class="text-sm font-medium <%= (@lead.days_since_last_contact || 0) > 7 ? 'text-warning' : 'text-base-content' %>">
+                <%= @lead.days_since_last_contact || "—" %>
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-base-content/50">Added</span>
+              <span class="text-sm font-medium text-base-content">
+                <%= @lead.date_added&.strftime("%b %-d, %Y") || "—" %>
+              </span>
+            </div>
+            <% if @lead.removed? %>
+              <div class="flex justify-between">
+                <span class="text-sm text-base-content/50">Removed</span>
+                <span class="text-sm font-medium text-error"><%= @lead.date_removed&.strftime("%b %-d, %Y") %></span>
+              </div>
+              <div>
+                <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium">Removal Reason</p>
+                <p class="text-sm text-base-content/70 mt-0.5"><%= @lead.removal_reason %></p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%# Remove Lead Modal %>
+<dialog id="remove_lead_modal" class="modal">
+  <div class="modal-box max-w-sm">
+    <div class="flex flex-col items-center text-center gap-3 mb-5">
+      <div class="size-12 rounded-full bg-error/10 flex items-center justify-center">
+        <%= icon "exclamation-triangle", library: "heroicons", class: "size-6 text-error" %>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold">Remove this lead?</h3>
+        <p class="text-sm text-base-content/50 mt-1">
+          The lead will be marked as removed. This can be reactivated later.
+        </p>
+      </div>
+    </div>
+
+    <%= form_with url: dashboard_lead_path(@lead), method: :delete do |f| %>
+      <div class="form-control mb-4">
+        <%= f.label :removal_reason, "Removal Reason *", class: "label label-text text-sm" %>
+        <%= f.select :removal_reason,
+          ["Disqualified", "Duplicate", "No Response", "Bad Fit", "Closed Lost", "Invalid Contact", "Other"],
+          { prompt: "Select reason..." },
+          class: "select select-bordered w-full", required: true,
+          name: "removal_reason" %>
+      </div>
+      <div class="flex gap-3">
+        <button type="button" onclick="document.getElementById('remove_lead_modal').close()" class="btn btn-ghost btn-sm flex-1">
+          Cancel
+        </button>
+        <%= f.submit "Yes, Remove", class: "btn btn-error btn-sm flex-1" %>
+      </div>
+    <% end %>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
