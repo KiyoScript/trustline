@@ -2,15 +2,12 @@
 
 <%
   role_colors = {
-    "super_admin" => { badge: "badge-error",    label: "Super Admin" },
-    "admin"       => { badge: "badge-primary",  label: "Admin" },
-    "manager"     => { badge: "badge-secondary",label: "Manager" },
-    "agent"       => { badge: "badge-success",  label: "Agent" },
-    "viewer"      => { badge: "badge-ghost",    label: "Viewer" },
+    "super_admin" => { badge: "badge-error",     label: "Super Admin" },
+    "admin"       => { badge: "badge-primary",   label: "Admin" },
+    "manager"     => { badge: "badge-secondary", label: "Manager" },
+    "agent"       => { badge: "badge-success",   label: "Agent" },
+    "viewer"      => { badge: "badge-ghost",     label: "Viewer" },
   }
-
-  role_order = { "super_admin" => 0, "admin" => 1, "manager" => 2, "agent" => 3, "viewer" => 4 }
-  sorted_members = @members.sort_by { |m| role_order[m[:role]] || 99 }
 %>
 
 <div class="p-6 bg-base-200 min-h-screen">
@@ -19,14 +16,16 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-xl font-bold text-base-content">Team</h1>
-      <p class="text-sm text-base-content/50 mt-0.5"><%= @members.size %> members</p>
+      <p class="text-sm text-base-content/50 mt-0.5"><%= @total_count %> members</p>
     </div>
-    <button
-      onclick="document.getElementById('invite_modal').showModal()"
-      class="btn btn-primary btn-sm gap-2">
-      <%= icon "user-plus", library: "heroicons", class: "size-4" %>
-      Invite Member
-    </button>
+    <% if current_user.super_admin? || current_user.admin? %>
+      <button
+        onclick="document.getElementById('invite_modal').showModal()"
+        class="btn btn-primary btn-sm gap-2">
+        <%= icon "user-plus", library: "heroicons", class: "size-4" %>
+        Add Member
+      </button>
+    <% end %>
   </div>
 
   <%# Summary KPIs %>
@@ -34,116 +33,264 @@
     <div class="card bg-base-100 border border-base-300">
       <div class="card-body p-4 gap-1">
         <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Total Members</p>
-        <p class="text-2xl font-bold text-base-content"><%= @members.size %></p>
+        <p class="text-2xl font-bold text-base-content"><%= @total_count %></p>
       </div>
     </div>
     <div class="card bg-base-100 border border-base-300">
       <div class="card-body p-4 gap-1">
         <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Admins & Managers</p>
-        <p class="text-2xl font-bold text-base-content"><%= @members.count { |m| %w[admin manager super_admin].include?(m[:role]) } %></p>
+        <p class="text-2xl font-bold text-base-content"><%= @admin_count %></p>
       </div>
     </div>
     <div class="card bg-base-100 border border-base-300">
       <div class="card-body p-4 gap-1">
         <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Agents</p>
-        <p class="text-2xl font-bold text-base-content"><%= @members.count { |m| m[:role] == "agent" } %></p>
+        <p class="text-2xl font-bold text-base-content"><%= @agent_count %></p>
       </div>
     </div>
     <div class="card bg-base-100 border border-base-300">
       <div class="card-body p-4 gap-1">
-        <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Active Members</p>
-        <p class="text-2xl font-bold text-success"><%= @members.count { |m| m[:status] == "active" } %></p>
+        <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium">Active</p>
+        <p class="text-2xl font-bold text-success"><%= @active_count %></p>
       </div>
     </div>
   </div>
 
-  <%# Member Table %>
-  <div class="card bg-base-100 border border-base-300">
-    <div class="card-body p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="font-medium text-base-content">Members</h2>
-        <label class="input input-bordered input-sm flex items-center gap-2 w-64 bg-base-100">
-          <%= icon "magnifying-glass", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
-          <input type="text" placeholder="Search member..." class="grow bg-transparent outline-none text-sm" />
-        </label>
-      </div>
+  <%# Search + Table %>
+  <div id="members-table" class="card bg-base-100 border border-base-300/50 rounded-2xl shadow-sm">
 
+    <%# Search bar inside card %>
+    <div class="p-4 border-b border-base-200">
+      <%= search_form_for @query, url: dashboard_teams_path, method: :get do |f| %>
+        <div class="flex items-center gap-3">
+          <label class="input input-bordered input-sm flex items-center gap-2 flex-1 max-w-sm bg-base-100">
+            <%= icon "magnifying-glass", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+            <%= f.search_field :full_name_or_email_cont,
+                  placeholder: "Search name or email...",
+                  class: "grow bg-transparent outline-none text-sm" %>
+          </label>
+          <%= f.select :role_eq,
+                User.roles.keys.map { |r| [r.humanize.gsub("_", " "), r] },
+                { include_blank: "All Roles" },
+                class: "select select-bordered select-sm bg-base-100" %>
+          <%= f.submit "Search", class: "btn btn-outline btn-sm" %>
+          <%= link_to "Clear", dashboard_teams_path, class: "btn btn-ghost btn-sm" %>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @members.any? %>
       <div class="overflow-x-auto">
-        <table class="table table-sm w-full">
-          <thead>
-            <tr class="border-b border-base-200">
-              <th class="text-xs text-base-content/40 font-medium">Member</th>
-              <th class="text-xs text-base-content/40 font-medium">Role</th>
-              <th class="text-xs text-base-content/40 font-medium text-center">Status</th>
-              <th class="text-xs text-base-content/40 font-medium text-center">Leads</th>
-              <th class="text-xs text-base-content/40 font-medium text-center">Activities</th>
-              <th class="text-xs text-base-content/40 font-medium text-center">Won</th>
-              <th class="text-xs text-base-content/40 font-medium">Joined</th>
-              <th class="text-xs text-base-content/40 font-medium text-right">Actions</th>
+        <table class="table table-pin-rows">
+          <thead class="bg-base-200/50">
+            <tr class="text-base-content/40 text-xs uppercase tracking-wider">
+              <th>Member</th>
+              <th>Role</th>
+              <th>Team</th>
+              <th>Status</th>
+              <th class="text-center">Leads</th>
+              <th class="text-center">Activities</th>
+              <th>Joined</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <% sorted_members.each do |member| %>
-              <% rc = role_colors[member[:role]] || { badge: "badge-ghost", label: member[:role].capitalize } %>
-              <tr class="border-b border-base-100 hover:bg-base-50 transition-colors">
+            <% @members.each do |member| %>
+              <% rc = role_colors[member.role] || { badge: "badge-ghost", label: member.role.humanize } %>
+              <tr class="hover:bg-base-200/40 transition-colors border-base-300/30 <%= member.active_status? ? '' : 'opacity-50' %>">
 
-                <%# Member Info %>
-                <td class="py-3">
+                <td>
                   <div class="flex items-center gap-3">
                     <div class="avatar avatar-placeholder shrink-0">
                       <div class="bg-primary/10 text-primary rounded-full size-9">
-                        <span class="text-sm font-bold"><%= member[:name].split.map(&:first).join.upcase[0..1] %></span>
+                        <span class="text-sm font-bold"><%= member.initials %></span>
                       </div>
                     </div>
                     <div>
-                      <p class="text-sm font-medium text-base-content"><%= member[:name] %></p>
-                      <p class="text-xs text-base-content/40"><%= member[:email] %></p>
+                      <p class="font-semibold text-sm text-base-content"><%= member.display_name %></p>
+                      <p class="text-base-content/40 text-xs"><%= member.email %></p>
                     </div>
                   </div>
                 </td>
 
-                <%# Role %>
-                <td class="py-3">
+                <td>
                   <span class="badge badge-sm badge-outline <%= rc[:badge] %>"><%= rc[:label] %></span>
                 </td>
 
-                <%# Status %>
-                <td class="py-3 text-center">
-                  <span class="badge badge-sm badge-outline <%= member[:status] == 'active' ? 'badge-success' : 'badge-ghost' %>">
-                    <%= member[:status].capitalize %>
+                <td class="text-sm text-base-content/60"><%= member.team.presence || "—" %></td>
+
+                <td>
+                  <span class="badge badge-sm badge-soft <%= member.active_status? ? 'badge-success' : 'badge-ghost' %>">
+                    <%= member.active_status? ? "Active" : "Inactive" %>
                   </span>
                 </td>
 
-                <%# Stats %>
-                <td class="py-3 text-center text-sm text-base-content/70"><%= member[:leads] %></td>
-                <td class="py-3 text-center text-sm text-base-content/70"><%= member[:activities] %></td>
-                <td class="py-3 text-center text-sm text-base-content/70"><%= member[:won] %></td>
-
-                <%# Joined %>
-                <td class="py-3 text-sm text-base-content/40"><%= member[:joined] %></td>
-
-                <%# Actions %>
-                <td class="py-3">
-                  <div class="flex items-center justify-end gap-1">
-                    <button class="btn btn-ghost btn-xs btn-circle" title="Edit role">
-                      <%= icon "pencil", library: "heroicons", class: "size-4 text-base-content/50" %>
-                    </button>
-                    <button class="btn btn-ghost btn-xs btn-circle" title="Remove member">
-                      <%= icon "trash", library: "heroicons", class: "size-4 text-error/60" %>
-                    </button>
-                  </div>
+                <td class="text-center text-sm text-base-content/60">
+                  <%= member.owned_leads.count %>
                 </td>
 
+                <td class="text-center text-sm text-base-content/60">
+                  <%= member.lead_movements.count %>
+                </td>
+
+                <td class="text-sm text-base-content/40">
+                  <%= member.hire_date&.strftime("%b %-d, %Y") || member.created_at.strftime("%b %-d, %Y") %>
+                </td>
+
+                <td>
+                  <% if current_user.super_admin? || current_user.admin? %>
+                    <div class="flex items-center gap-1">
+                      <button
+                        class="btn btn-ghost btn-xs btn-square tooltip"
+                        data-tip="Edit"
+                        onclick="document.getElementById('edit_modal_<%= member.id %>').showModal()">
+                        <%= icon "pencil-square", library: "heroicons", class: "size-4" %>
+                      </button>
+
+                      <%= button_to toggle_status_dashboard_team_path(member),
+                            method: :patch,
+                            class: "btn btn-ghost btn-xs btn-square tooltip #{member.active_status? ? 'text-warning' : 'text-success'}",
+                            data: { tip: member.active_status? ? "Deactivate" : "Activate" } do %>
+                        <%= icon(member.active_status? ? "pause-circle" : "play-circle", library: "heroicons", class: "size-4") %>
+                      <% end %>
+
+                      <% unless member == current_user %>
+                        <button
+                          class="btn btn-ghost btn-xs btn-square tooltip text-error"
+                          data-tip="Remove"
+                          onclick="document.getElementById('remove_modal_<%= member.id %>').showModal()">
+                          <%= icon "trash", library: "heroicons", class: "size-4" %>
+                        </button>
+                      <% end %>
+                    </div>
+                  <% end %>
+
+                  <%# Edit Modal per member %>
+                  <dialog id="edit_modal_<%= member.id %>" class="modal">
+                    <div class="modal-box w-11/12 max-w-md">
+                      <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-lg font-bold">Edit Member</h3>
+                        <button onclick="document.getElementById('edit_modal_<%= member.id %>').close()" class="btn btn-ghost btn-sm btn-circle">
+                          <%= icon "x-mark", library: "heroicons", class: "size-5" %>
+                        </button>
+                      </div>
+                      <%= form_with url: dashboard_team_path(member), method: :patch, class: "space-y-4" do |f| %>
+                        <div class="grid grid-cols-2 gap-4">
+                          <div class="form-control">
+                            <%= f.label :full_name, "Full Name", class: "label label-text text-sm" %>
+                            <input type="text" name="user[full_name]" value="<%= member.full_name %>" class="input input-bordered w-full" />
+                          </div>
+                          <div class="form-control">
+                            <%= f.label :email, "Email", class: "label label-text text-sm" %>
+                            <input type="email" name="user[email]" value="<%= member.email %>" class="input input-bordered w-full" />
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                          <div class="form-control">
+                            <%= f.label :role, "Role", class: "label label-text text-sm" %>
+                            <select name="user[role]" class="select select-bordered w-full">
+                              <% User.roles.keys.each do |r| %>
+                                <option value="<%= r %>" <%= 'selected' if member.role == r %>><%= r.humanize.gsub("_", " ") %></option>
+                              <% end %>
+                            </select>
+                          </div>
+                          <div class="form-control">
+                            <%= f.label :team, "Team", class: "label label-text text-sm" %>
+                            <input type="text" name="user[team]" value="<%= member.team %>" class="input input-bordered w-full" />
+                          </div>
+                        </div>
+                        <div class="form-control">
+                          <%= f.label :hire_date, "Hire Date", class: "label label-text text-sm" %>
+                          <input type="date" name="user[hire_date]" value="<%= member.hire_date %>" class="input input-bordered w-full" />
+                        </div>
+                        <div class="flex justify-end gap-3 pt-2">
+                          <button type="button" onclick="document.getElementById('edit_modal_<%= member.id %>').close()" class="btn btn-ghost btn-sm">Cancel</button>
+                          <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                        </div>
+                      <% end %>
+                    </div>
+                    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+                  </dialog>
+
+                  <%# Remove Modal per member %>
+                  <dialog id="remove_modal_<%= member.id %>" class="modal">
+                    <div class="modal-box max-w-sm">
+                      <div class="flex flex-col items-center text-center gap-3 mb-5">
+                        <div class="size-12 rounded-full bg-error/10 flex items-center justify-center">
+                          <%= icon "exclamation-triangle", library: "heroicons", class: "size-6 text-error" %>
+                        </div>
+                        <div>
+                          <h3 class="text-lg font-bold">Remove member?</h3>
+                          <p class="text-sm text-base-content/50 mt-1">
+                            <%= member.display_name %> will be deactivated. Their data will be preserved.
+                          </p>
+                        </div>
+                      </div>
+                      <div class="flex gap-3">
+                        <button onclick="document.getElementById('remove_modal_<%= member.id %>').close()" class="btn btn-ghost btn-sm flex-1">Cancel</button>
+                        <%= button_to dashboard_team_path(member), method: :delete, class: "btn btn-error btn-sm flex-1" do %>
+                          Yes, Remove
+                        <% end %>
+                      </div>
+                    </div>
+                    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+                  </dialog>
+                </td>
               </tr>
             <% end %>
           </tbody>
         </table>
       </div>
-    </div>
+
+      <%# Pagy %>
+      <% if @pagy.pages > 1 %>
+        <div class="flex items-center justify-between px-5 py-3 border-t border-base-300/30 bg-base-100">
+          <p class="text-xs text-base-content/40">
+            Showing
+            <span class="font-semibold text-base-content/70"><%= (@pagy.page - 1) * @pagy.limit + 1 %>–<%= [@pagy.page * @pagy.limit, @pagy.count].min %></span>
+            of
+            <span class="font-semibold text-base-content/70"><%= @pagy.count %></span>
+            members
+          </p>
+          <div class="join">
+            <% if @pagy.page > 1 %>
+              <%= link_to dashboard_teams_path(query: params[:query]&.to_unsafe_h, page: @pagy.page - 1), class: "join-item btn btn-sm btn-ghost" do %>
+                <%= icon "chevron-left", library: "heroicons", class: "size-4" %>
+              <% end %>
+            <% else %>
+              <button class="join-item btn btn-sm btn-ghost opacity-30" disabled><%= icon "chevron-left", library: "heroicons", class: "size-4" %></button>
+            <% end %>
+
+            <% (1..@pagy.pages).select { |p| p == 1 || p == @pagy.pages || (p - @pagy.page).abs <= 1 }.each_with_index do |p, i| %>
+              <%= link_to p, dashboard_teams_path(query: params[:query]&.to_unsafe_h, page: p),
+                    class: "join-item btn btn-sm #{p == @pagy.page ? 'btn-primary' : 'btn-ghost'}" %>
+            <% end %>
+
+            <% if @pagy.page < @pagy.pages %>
+              <%= link_to dashboard_teams_path(query: params[:query]&.to_unsafe_h, page: @pagy.page + 1), class: "join-item btn btn-sm btn-ghost" do %>
+                <%= icon "chevron-right", library: "heroicons", class: "size-4" %>
+              <% end %>
+            <% else %>
+              <button class="join-item btn btn-sm btn-ghost opacity-30" disabled><%= icon "chevron-right", library: "heroicons", class: "size-4" %></button>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+    <% else %>
+      <div class="flex flex-col items-center justify-center text-center py-16">
+        <div class="bg-base-200 rounded-full p-5 size-20 flex items-center justify-center mb-4">
+          <%= icon "users", library: "heroicons", class: "size-9 text-base-content/25" %>
+        </div>
+        <p class="font-bold text-base">No members found</p>
+        <p class="text-base-content/40 text-sm font-normal mt-1">Try adjusting your search</p>
+      </div>
+    <% end %>
+
   </div>
 
   <%# Role Legend %>
-  <div class="card bg-base-100 border border-base-300 mt-3">
+  <div class="card bg-base-100 border border-base-300 mt-4">
     <div class="card-body p-4">
       <p class="text-xs text-base-content/40 font-medium uppercase tracking-wide mb-3">Role Permissions</p>
       <div class="grid grid-cols-5 gap-3">
@@ -165,43 +312,52 @@
 
 </div>
 
-<%# Invite Member Modal %>
+<%# Add Member Modal %>
 <dialog id="invite_modal" class="modal">
   <div class="modal-box w-11/12 max-w-md">
     <div class="flex items-center justify-between mb-6">
-      <h3 class="text-lg font-bold">Invite Member</h3>
+      <h3 class="text-lg font-bold">Add Member</h3>
       <button onclick="document.getElementById('invite_modal').close()" class="btn btn-ghost btn-sm btn-circle">
         <%= icon "x-mark", library: "heroicons", class: "size-5" %>
       </button>
     </div>
 
     <%= form_with url: dashboard_teams_path, method: :post, class: "space-y-4" do |f| %>
-
-      <div class="form-control">
-        <%= f.label :name, "Full Name *", class: "label label-text text-sm" %>
-        <%= f.text_field :name, class: "input input-bordered w-full", required: true, placeholder: "e.g. Juan dela Cruz" %>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :full_name, "Full Name *", class: "label label-text text-sm" %>
+          <%= f.text_field :full_name, name: "user[full_name]", class: "input input-bordered w-full", required: true %>
+        </div>
+        <div class="form-control">
+          <%= f.label :email, "Email *", class: "label label-text text-sm" %>
+          <%= f.email_field :email, name: "user[email]", class: "input input-bordered w-full", required: true %>
+        </div>
       </div>
-
-      <div class="form-control">
-        <%= f.label :email, "Email Address *", class: "label label-text text-sm" %>
-        <%= f.email_field :email, class: "input input-bordered w-full", required: true, placeholder: "juan@trustline.com" %>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :role, "Role *", class: "label label-text text-sm" %>
+          <%= f.select :role,
+                User.roles.keys.map { |r| [r.humanize.gsub("_", " "), r] },
+                {},
+                name: "user[role]",
+                class: "select select-bordered w-full" %>
+        </div>
+        <div class="form-control">
+          <%= f.label :team, "Team", class: "label label-text text-sm" %>
+          <%= f.text_field :team, name: "user[team]", class: "input input-bordered w-full" %>
+        </div>
       </div>
-
       <div class="form-control">
-        <%= f.label :role, "Role *", class: "label label-text text-sm" %>
-        <%= f.select :role,
-          [["Admin", "admin"], ["Manager", "manager"], ["Agent", "agent"], ["Viewer", "viewer"]],
-          {},
-          class: "select select-bordered w-full" %>
+        <%= f.label :hire_date, "Hire Date", class: "label label-text text-sm" %>
+        <%= f.date_field :hire_date, name: "user[hire_date]", class: "input input-bordered w-full" %>
       </div>
-
+      <p class="text-xs text-base-content/40">
+        A temporary password will be auto-generated. Ask the member to reset it via Forgot Password.
+      </p>
       <div class="flex justify-end gap-3 pt-2">
-        <button type="button" onclick="document.getElementById('invite_modal').close()" class="btn btn-ghost btn-sm">
-          Cancel
-        </button>
-        <%= f.submit "Send Invite", class: "btn btn-primary btn-sm" %>
+        <button type="button" onclick="document.getElementById('invite_modal').close()" class="btn btn-ghost btn-sm">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Add Member</button>
       </div>
-
     <% end %>
   </div>
   <form method="dialog" class="modal-backdrop"><button>close</button></form>

@@ -37,8 +37,12 @@ Rails.application.routes.draw do
       resources :activities,     only: [ :index, :create, :show, :edit, :update, :destroy ]
       resources :productivities, only: [ :index ]
       resources :reports,        only: [ :index ]
-      resources :teams,          only: [ :index, :create ]
-      resources :settings,       only: [ :index ]
+      resources :teams,          only: [ :index, :create, :edit, :update, :destroy ] do
+        member do
+          patch :toggle_status
+        end
+      end
+      resources :settings, only: [ :index ]
     end
   end
 

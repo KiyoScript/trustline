@@ -1,22 +1,81 @@
-# app/controllers/dashboard/teams_controller.rb
 class Dashboard::TeamsController < ApplicationController
   before_action :authenticate_user!
+  before_action :require_admin!
+  before_action :set_member, only: [ :edit, :update, :destroy, :toggle_status ]
 
   def index
-    @members = static_members
+    @query = User.ransack(params[:query])
+    @query.sorts = "full_name asc" if @query.sorts.empty?
+    @pagy, @members = pagy(:offset, @query.result(distinct: true), items: 20)
+
+    @total_count   = User.count
+    @admin_count   = User.where(role: [ :super_admin, :admin, :manager ]).count
+    @agent_count   = User.agent.count
+    @active_count  = User.where(active_status: true).count
+  end
+
+  def new
+    @member = User.new
+  end
+
+  def create
+    @member = User.new(invite_params)
+    @member.password              = SecureRandom.hex(12)
+    @member.password_confirmation = @member.password
+
+    if @member.save
+      redirect_to dashboard_teams_path, notice: "#{@member.display_name} has been added to the team."
+    else
+      @query = User.ransack({})
+      @pagy, @members = pagy(:offset, User.all, items: 20)
+      render :index, status: :unprocessable_entity
+    end
+  end
+
+  def edit
+  end
+
+  def update
+    if @member.update(update_params)
+      redirect_to dashboard_teams_path, notice: "#{@member.display_name} updated successfully."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def toggle_status
+    new_status = !@member.active_status
+    @member.update!(active_status: new_status)
+    status_label = new_status ? "activated" : "deactivated"
+    redirect_to dashboard_teams_path, notice: "#{@member.display_name} has been #{status_label}."
+  end
+
+  def destroy
+    if @member == current_user
+      redirect_to dashboard_teams_path, alert: "You cannot remove yourself."
+      return
+    end
+    @member.update!(active_status: false)
+    redirect_to dashboard_teams_path, notice: "#{@member.display_name} has been deactivated."
   end
 
   private
 
-  def static_members
-    [
-      { name: "Demo User",       email: "demo@trustline.com",          role: "admin",   status: "active", leads: 6,  activities: 10, won: 1, joined: "2026-01-15" },
-      { name: "Jordan Mitchell", email: "jordan.mitchell@trustline.com", role: "manager", status: "active", leads: 5,  activities: 4,  won: 1, joined: "2026-01-20" },
-      { name: "Taylor Brooks",   email: "taylor.brooks@trustline.com",   role: "manager", status: "active", leads: 4,  activities: 4,  won: 0, joined: "2026-02-01" },
-      { name: "Cymon Trillana",  email: "cymon.t@trustline.com",         role: "agent",   status: "active", leads: 3,  activities: 1,  won: 0, joined: "2026-02-10" },
-      { name: "Alex Rivera",     email: "alex.rivera@trustline.com",     role: "agent",   status: "active", leads: 2,  activities: 1,  won: 0, joined: "2026-02-15" },
-      { name: "Casey Nguyen",    email: "casey.nguyen@trustline.com",    role: "agent",   status: "active", leads: 1,  activities: 1,  won: 0, joined: "2026-03-01" },
-      { name: "Ken Enecio",      email: "ken.enecio@trustline.com",      role: "viewer",  status: "active", leads: 0,  activities: 0,  won: 0, joined: "2026-03-10" }
-    ]
+  def set_member
+    @member = User.find(params[:id])
+  end
+
+  def require_admin!
+    unless current_user.super_admin? || current_user.admin?
+      redirect_to authenticated_root_path, alert: "Access denied."
+    end
+  end
+
+  def invite_params
+    params.require(:user).permit(:full_name, :email, :role, :team, :hire_date, :active_status)
+  end
+
+  def update_params
+    params.require(:user).permit(:full_name, :email, :role, :team, :hire_date, :active_status)
   end
 end
