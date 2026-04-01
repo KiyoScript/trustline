@@ -7,7 +7,7 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
-
+# db/seeds.rb
 puts "Seeding demo data..."
 
 # ── Users ──────────────────────────────────────────────────────────────────────
@@ -99,4 +99,46 @@ leads_data.each do |ld|
 end
 
 puts "  Created #{leads_data.size} leads"
+
+# ── Activities ──────────────────────────────────────────────────────────────────
+activities_data = [
+  { lead: "GreenPath Energy",     user: demo,   type: :call,             date: "2026-03-24", result: "In Progress",                  notes: "Reviewing final contract terms, legal involved",                                     next_step: "Final contract review",    next_date: "2026-03-28" },
+  { lead: "Acme Corp",            user: demo,   type: :call,             date: "2026-03-22", result: "Positive",                     notes: "Discussed enterprise pricing, very interested",                                      next_step: "Send proposal",            next_date: "2026-03-26" },
+  { lead: "FinServe Partners",    user: demo,   type: :call,             date: "2026-03-19", result: "Interested",                   notes: "Brief intro call, very interested in enterprise features",                          next_step: nil,                        next_date: nil },
+  { lead: "Vantage Pharma",       user: jordan, type: :call,             date: "2026-03-18", result: "Very positive — CTO engaged",  notes: "Discussed technical requirements. Full API integration needed. Budget approved Q2.", next_step: "Send formal proposal",     next_date: "2026-03-20" },
+  { lead: "Pinnacle Health",      user: demo,   type: :call,             date: "2026-03-16", result: "Interested in full platform",  notes: "Compliance-heavy environment. Need to emphasize security certifications.",           next_step: "Send case studies",        next_date: "2026-03-23" },
+  { lead: "Summit Education",     user: demo,   type: :call,             date: "2026-03-14", result: "Needs demo",                   notes: "Discussed integration with existing LMS system",                                     next_step: "Schedule demo",            next_date: "2026-03-25" },
+  { lead: "FinServe Partners",    user: demo,   type: :email,            date: "2026-03-23", result: "Confirmed",                    notes: "Confirmed discovery call for March 27",                                              next_step: "Discovery call",           next_date: "2026-03-27" },
+  { lead: "NovaTech",             user: jordan, type: :email,            date: "2026-03-20", result: "Confirmed call date",          notes: "Sent calendar invite for Thursday 3pm. Lisa mentioned she'd loop in ops team.",      next_step: "Prep discovery agenda",    next_date: nil },
+  { lead: "ClearPath Logistics",  user: demo,   type: :email,            date: "2026-03-19", result: "Initial contact made",         notes: "Sent intro email with product overview PDF. Ahmed opened it 3 times.",              next_step: "Follow up call",           next_date: "2026-03-27" },
+  { lead: "Quantum Labs",         user: demo,   type: :email,            date: "2026-03-17", result: "Interested",                   notes: "Responded to inbound inquiry. Sent pricing tiers.",                                  next_step: "Book intro call",          next_date: "2026-03-26" },
+  { lead: "Summit Education",     user: demo,   type: :email,            date: "2026-03-15", result: "Re-engaged",                   notes: "Followed up after no response. He replied same day.",                                next_step: "Call this week",           next_date: "2026-03-28" },
+  { lead: "Apex Retail Group",    user: jordan, type: :email,            date: "2026-03-13", result: "Under review",                 notes: "Sent revised pricing proposal after negotiation.",                                   next_step: "Follow up",                next_date: "2026-03-29" },
+  { lead: "Bright Solutions",     user: demo,   type: :linkedin_message, date: "2026-03-21", result: "Replied",                      notes: "Connected on LinkedIn, scheduling call.",                                             next_step: "Qualification call",       next_date: "2026-03-26" },
+  { lead: "CloudEdge Systems",    user: alex,   type: :linkedin_message, date: "2026-03-17", result: "Responded positively",         notes: "Initial outreach on LinkedIn. Patrick confirmed interest and asked for product details.", next_step: "Schedule product demo", next_date: "2026-03-25" },
+  { lead: "TechFlow Inc",         user: demo,   type: :meeting,          date: "2026-03-20", result: "Completed discovery",          notes: "Full technical requirements gathered, CTO aligned.",                                  next_step: "Schedule demo",            next_date: "2026-03-27" },
+  { lead: "Orion Fintech",        user: taylor, type: :meeting,          date: "2026-03-15", result: "Strong interest, negotiation", notes: "In-person meeting. They want a 10% discount. Decision expected by end of month.",    next_step: "Revised proposal",         next_date: "2026-03-22" },
+  { lead: "Global Media",         user: demo,   type: :proposal_sent,    date: "2026-03-18", result: "Sent",                         notes: "Custom proposal for 24-month plan.",                                                 next_step: "Follow up on proposal",    next_date: "2026-03-25" },
+  { lead: "Skyline Developments", user: taylor, type: :proposal_sent,    date: "2026-03-10", result: "Proposal delivered — $95k",    notes: "Board reviewing on 21st. Price was accepted in principle.",                          next_step: "Negotiate contract terms", next_date: "2026-03-19" },
+  { lead: "ClearPath Logistics",  user: cymon,  type: :follow_up,        date: "2026-03-27", result: "Voice mail",                   notes: "Client asked me to call today but got voice mail 7 times.",                          next_step: "Call again monday",        next_date: "2026-03-30" },
+  { lead: "CloudNine Systems",    user: demo,   type: :follow_up,        date: "2026-03-24", result: "Engaged",                      notes: "Technical spec discussion, very detailed requirements.",                              next_step: "Send technical spec",      next_date: "2026-03-27" },
+  { lead: "Orion Fintech",        user: jordan, type: :follow_up,        date: "2026-03-15", result: "Scheduled strategy call",      notes: "Third touch. Lucas confirmed he's the decision maker. Moving fast.",                  next_step: "Strategy call",            next_date: "2026-03-28" }
+]
+
+activities_data.each do |ad|
+  lead = Lead.find_by!(company_name: ad[:lead])
+  Activity.find_or_create_by!(
+    lead:          lead,
+    user:          ad[:user],
+    activity_type: ad[:type],
+    activity_date: ad[:date]
+  ) do |a|
+    a.result        = ad[:result]
+    a.notes         = ad[:notes]
+    a.next_step     = ad[:next_step]
+    a.next_step_date = ad[:next_date]
+  end
+end
+
+puts "  Created #{activities_data.size} activities"
 puts "Done! You can log in with demo@trustline.com / password123"

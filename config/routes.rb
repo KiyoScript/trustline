@@ -30,7 +30,7 @@ Rails.application.routes.draw do
     namespace :dashboard do
       resources :pipelines, only: [ :index ]
       resources :leads,          only: [ :index, :create, :show, :edit, :update, :destroy ]
-      resources :activities, only: [ :index, :create ]
+      resources :activities,     only: [ :index, :create, :show, :edit, :update, :destroy ]
       resources :productivities, only: [ :index ]
       resources :reports, only: [ :index ]
       resources :teams, only: [ :index, :create ]

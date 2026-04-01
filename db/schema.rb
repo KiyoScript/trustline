@@ -10,9 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_30_133122) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_31_055657) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "activities", force: :cascade do |t|
+    t.date "activity_date", null: false
+    t.integer "activity_type", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "lead_id", null: false
+    t.string "next_step"
+    t.date "next_step_date"
+    t.text "notes"
+    t.string "result"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["activity_date"], name: "index_activities_on_activity_date"
+    t.index ["activity_type"], name: "index_activities_on_activity_type"
+    t.index ["lead_id", "activity_date"], name: "index_activities_on_lead_id_and_activity_date"
+    t.index ["lead_id"], name: "index_activities_on_lead_id"
+    t.index ["user_id", "activity_date"], name: "index_activities_on_user_id_and_activity_date"
+    t.index ["user_id"], name: "index_activities_on_user_id"
+  end
 
   create_table "lead_movement_histories", force: :cascade do |t|
     t.integer "action_type", default: 0, null: false
@@ -90,6 +109,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_133122) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "activities", "leads"
+  add_foreign_key "activities", "users"
   add_foreign_key "lead_movement_histories", "leads"
   add_foreign_key "lead_movement_histories", "users", column: "changed_by_id"
   add_foreign_key "leads", "users", column: "assigned_to_id"

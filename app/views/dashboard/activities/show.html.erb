@@ -1,0 +1,171 @@
+<%# app/views/dashboard/activities/show.html.erb %>
+
+<%
+  type_meta = {
+    "call"             => { icon: "phone",                     color: "text-blue-500",   bg: "bg-blue-50",   border: "border-blue-200" },
+    "email"            => { icon: "envelope",                  color: "text-indigo-500", bg: "bg-indigo-50", border: "border-indigo-200" },
+    "linkedin_message" => { icon: "chat-bubble-left-ellipsis", color: "text-teal-500",   bg: "bg-teal-50",   border: "border-teal-200" },
+    "meeting"          => { icon: "user-group",                color: "text-purple-500", bg: "bg-purple-50", border: "border-purple-200" },
+    "note"             => { icon: "document",                  color: "text-gray-500",   bg: "bg-gray-50",   border: "border-gray-200" },
+    "proposal_sent"    => { icon: "document-text",             color: "text-amber-500",  bg: "bg-amber-50",  border: "border-amber-200" },
+    "follow_up"        => { icon: "calendar",                  color: "text-teal-500",   bg: "bg-teal-50",   border: "border-teal-200" },
+  }
+  meta = type_meta[@activity.activity_type]
+%>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <%= link_to dashboard_activities_path(tab: @activity.activity_type),
+            class: "btn btn-ghost btn-sm btn-circle" do %>
+        <%= icon "arrow-left", library: "heroicons", class: "size-5" %>
+      <% end %>
+      <div>
+        <h1 class="text-xl font-bold text-base-content"><%= @activity.type_label %></h1>
+        <p class="text-sm text-base-content/50 mt-0.5">
+          <%= @activity.lead.company_name %> · <%= @activity.lead.contact_name %>
+        </p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to edit_dashboard_activity_path(@activity),
+            class: "btn btn-outline btn-sm gap-2" do %>
+        <%= icon "pencil", library: "heroicons", class: "size-4" %>
+        Edit
+      <% end %>
+      <button
+        onclick="document.getElementById('delete_activity_modal').showModal()"
+        class="btn btn-error btn-outline btn-sm gap-2">
+        <%= icon "trash", library: "heroicons", class: "size-4" %>
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-5">
+
+    <%# Left — Activity Details %>
+    <div class="col-span-2 space-y-5">
+
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-5">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="size-10 rounded-full <%= meta[:bg] %> border <%= meta[:border] %> flex items-center justify-center shrink-0">
+              <%= icon meta[:icon], library: "heroicons", class: "size-5 #{meta[:color]}" %>
+            </div>
+            <div>
+              <p class="text-sm font-semibold <%= meta[:color] %>"><%= @activity.type_label %></p>
+              <p class="text-xs text-base-content/40"><%= @activity.activity_date.strftime("%B %-d, %Y") %></p>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <% if @activity.result.present? %>
+              <div>
+                <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium mb-1">Result</p>
+                <p class="text-sm font-medium text-base-content"><%= @activity.result %></p>
+              </div>
+            <% end %>
+
+            <% if @activity.notes.present? %>
+              <div>
+                <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium mb-1">Notes</p>
+                <p class="text-sm text-base-content/70 leading-relaxed"><%= @activity.notes %></p>
+              </div>
+            <% end %>
+
+            <% if @activity.next_step.present? %>
+              <div>
+                <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium mb-1">Next Step</p>
+                <p class="text-sm text-primary font-medium">
+                  <%= @activity.next_step %>
+                  <% if @activity.next_step_date.present? %>
+                    <span class="text-base-content/40 font-normal">
+                      · <%= @activity.next_step_date.strftime("%B %-d, %Y") %>
+                    </span>
+                  <% end %>
+                </p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <%# Right — Meta Info %>
+    <div class="col-span-1 space-y-4">
+
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-5">
+          <h2 class="font-medium text-base-content mb-4">Details</h2>
+          <div class="space-y-3">
+            <div>
+              <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium">Lead</p>
+              <%= link_to @activity.lead.company_name,
+                    dashboard_lead_path(@activity.lead),
+                    class: "text-sm text-primary hover:underline font-medium mt-0.5 block" %>
+              <p class="text-xs text-base-content/40"><%= @activity.lead.contact_name %></p>
+            </div>
+            <div>
+              <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium">Logged By</p>
+              <div class="flex items-center gap-2 mt-1">
+                <div class="avatar avatar-placeholder">
+                  <div class="bg-primary/10 text-primary rounded-full size-7">
+                    <span class="text-xs font-bold"><%= @activity.user.initials %></span>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-base-content"><%= @activity.user.display_name %></p>
+                  <p class="text-xs text-base-content/40 capitalize"><%= @activity.user.role.humanize %></p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium">Activity Date</p>
+              <p class="text-sm text-base-content mt-0.5"><%= @activity.activity_date.strftime("%B %-d, %Y") %></p>
+            </div>
+            <div>
+              <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium">Logged At</p>
+              <p class="text-sm text-base-content mt-0.5"><%= @activity.created_at.strftime("%B %-d, %Y %I:%M %p") %></p>
+            </div>
+            <div>
+              <p class="text-xs text-base-content/40 uppercase tracking-wide font-medium">Productivity Points</p>
+              <p class="text-sm font-bold text-primary mt-0.5">+<%= @activity.productivity_points %> pts</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%# Delete Modal %>
+<dialog id="delete_activity_modal" class="modal">
+  <div class="modal-box max-w-sm">
+    <div class="flex flex-col items-center text-center gap-3 mb-5">
+      <div class="size-12 rounded-full bg-error/10 flex items-center justify-center">
+        <%= icon "exclamation-triangle", library: "heroicons", class: "size-6 text-error" %>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold">Delete this activity?</h3>
+        <p class="text-sm text-base-content/50 mt-1">
+          This action cannot be undone.
+        </p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="document.getElementById('delete_activity_modal').close()" class="btn btn-ghost btn-sm flex-1">
+        Cancel
+      </button>
+      <%= button_to dashboard_activity_path(@activity), method: :delete,
+            class: "btn btn-error btn-sm flex-1" do %>
+        Yes, Delete
+      <% end %>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>

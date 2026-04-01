@@ -1,0 +1,124 @@
+<%# app/views/dashboard/activities/edit.html.erb %>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to dashboard_activity_path(@activity),
+          class: "btn btn-ghost btn-sm btn-circle" do %>
+      <%= icon "arrow-left", library: "heroicons", class: "size-5" %>
+    <% end %>
+    <div>
+      <h1 class="text-xl font-bold text-base-content">Edit Activity</h1>
+      <p class="text-sm text-base-content/50 mt-0.5">
+        <%= @activity.type_label %> — <%= @activity.lead.company_name %>
+      </p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300 w-full">
+    <div class="card-body p-6">
+
+      <%= form_with model: [:dashboard, @activity], method: :patch, class: "space-y-5" do |f| %>
+
+        <% if @activity.errors.any? %>
+          <div class="alert alert-error">
+            <ul class="list-disc list-inside text-sm">
+              <% @activity.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="divider text-xs text-base-content/40 uppercase tracking-wide">Activity Info</div>
+
+        <div class="form-control">
+          <%= f.label :lead_id, "Lead *", class: "label label-text text-sm" %>
+          <%= f.select :lead_id,
+                Lead.active_leads.order(:company_name).map { |l| ["#{l.company_name} — #{l.contact_name}", l.id] },
+                {},
+                class: "select select-bordered w-full", required: true %>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :activity_type, "Activity Type", class: "label label-text text-sm" %>
+            <%= f.select :activity_type,
+                  Activity.activity_types.keys.map { |t| [t.humanize.gsub("_", " "), t] },
+                  {},
+                  class: "select select-bordered w-full" %>
+          </div>
+          <div class="form-control">
+            <%= f.label :activity_date, "Activity Date", class: "label label-text text-sm" %>
+            <%= f.date_field :activity_date, class: "input input-bordered w-full" %>
+          </div>
+        </div>
+
+        <div class="form-control">
+          <%= f.label :result, "Result", class: "label label-text text-sm" %>
+          <%= f.text_field :result, placeholder: "e.g. Positive, call scheduled...", class: "input input-bordered w-full" %>
+        </div>
+
+        <div class="form-control">
+          <%= f.label :notes, "Notes", class: "label label-text text-sm" %>
+          <%= f.text_area :notes, rows: 4, class: "textarea textarea-bordered w-full" %>
+        </div>
+
+        <div class="divider text-xs text-base-content/40 uppercase tracking-wide">Next Steps</div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :next_step, "Next Step", class: "label label-text text-sm" %>
+            <%= f.text_field :next_step, class: "input input-bordered w-full" %>
+          </div>
+          <div class="form-control">
+            <%= f.label :next_step_date, "Next Step Date", class: "label label-text text-sm" %>
+            <%= f.date_field :next_step_date, class: "input input-bordered w-full" %>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-2">
+          <button
+            type="button"
+            onclick="document.getElementById('delete_activity_modal').showModal()"
+            class="btn btn-error btn-outline btn-sm gap-2">
+            <%= icon "trash", library: "heroicons", class: "size-4" %>
+            Delete Activity
+          </button>
+          <div class="flex gap-3">
+            <%= link_to "Cancel", dashboard_activity_path(@activity), class: "btn btn-ghost btn-sm" %>
+            <%= f.submit "Save Changes", class: "btn btn-primary btn-sm" %>
+          </div>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+
+</div>
+
+<%# Delete Modal %>
+<dialog id="delete_activity_modal" class="modal">
+  <div class="modal-box max-w-sm">
+    <div class="flex flex-col items-center text-center gap-3 mb-5">
+      <div class="size-12 rounded-full bg-error/10 flex items-center justify-center">
+        <%= icon "exclamation-triangle", library: "heroicons", class: "size-6 text-error" %>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold">Delete this activity?</h3>
+        <p class="text-sm text-base-content/50 mt-1">This action cannot be undone.</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="document.getElementById('delete_activity_modal').close()" class="btn btn-ghost btn-sm flex-1">
+        Cancel
+      </button>
+      <%= button_to dashboard_activity_path(@activity), method: :delete,
+            class: "btn btn-error btn-sm flex-1" do %>
+        Yes, Delete
+      <% end %>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
