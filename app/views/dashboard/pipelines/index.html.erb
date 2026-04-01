@@ -1,15 +1,32 @@
 <%# app/views/dashboard/pipelines/index.html.erb %>
 
-<% stage_colors = {
-  "Sourced"                 => { text: "text-base-content", border: "border-base-300" },
-  "Contacted"               => { text: "text-blue-500",     border: "border-blue-200" },
-  "Engaged"                 => { text: "text-teal-500",     border: "border-teal-200" },
-  "Qualified"               => { text: "text-green-500",    border: "border-green-200" },
-  "Call Booked"             => { text: "text-pink-500",     border: "border-pink-200" },
-  "Discovery Done"          => { text: "text-purple-500",   border: "border-purple-200" },
-  "Proposal Sent"           => { text: "text-amber-500",    border: "border-amber-200" },
-  "Negotiation / Follow-up" => { text: "text-orange-500",   border: "border-orange-200" }
-} %>
+<%
+  stage_labels = {
+    "sourced"               => "Sourced",
+    "contacted"             => "Contacted",
+    "engaged"               => "Engaged",
+    "qualified"             => "Qualified",
+    "call_booked"           => "Call Booked",
+    "discovery_done"        => "Discovery Done",
+    "proposal_sent"         => "Proposal Sent",
+    "negotiation_follow_up" => "Negotiation / Follow-up",
+    "closed_won"            => "Closed Won",
+    "closed_lost"           => "Closed Lost",
+  }
+
+  stage_colors = {
+    "sourced"               => { text: "text-base-content",  border: "border-base-300",   bg: "bg-base-100" },
+    "contacted"             => { text: "text-blue-500",      border: "border-blue-200",   bg: "bg-blue-50/50" },
+    "engaged"               => { text: "text-teal-500",      border: "border-teal-200",   bg: "bg-teal-50/50" },
+    "qualified"             => { text: "text-green-500",     border: "border-green-200",  bg: "bg-green-50/50" },
+    "call_booked"           => { text: "text-pink-500",      border: "border-pink-200",   bg: "bg-pink-50/50" },
+    "discovery_done"        => { text: "text-purple-500",    border: "border-purple-200", bg: "bg-purple-50/50" },
+    "proposal_sent"         => { text: "text-amber-500",     border: "border-amber-200",  bg: "bg-amber-50/50" },
+    "negotiation_follow_up" => { text: "text-orange-500",    border: "border-orange-200", bg: "bg-orange-50/50" },
+    "closed_won"            => { text: "text-green-600",     border: "border-green-300",  bg: "bg-green-50/50" },
+    "closed_lost"           => { text: "text-red-400",       border: "border-red-200",    bg: "bg-red-50/50" },
+  }
+%>
 
 <div class="p-6 bg-base-200 min-h-screen">
 
@@ -17,8 +34,11 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-xl font-bold text-base-content">Pipeline Board</h1>
-      <p class="text-sm text-base-content/50 mt-0.5"><%= @leads.size %> active leads</p>
+      <p class="text-sm text-base-content/50 mt-0.5">
+        <%= @leads_by_stage.values.sum(&:length) %> active leads
+      </p>
     </div>
+    <%= link_to new_dashboard_lead_path rescue nil %>
     <button
       onclick="document.getElementById('add_lead_modal').showModal()"
       class="btn btn-primary btn-sm gap-2">
@@ -28,55 +48,85 @@
   </div>
 
   <%# Kanban Board %>
-  <div class="flex gap-4 overflow-x-auto pb-6">
-    <% @stages.each do |stage| %>
-      <% leads = @leads_by_stage[stage] || [] %>
-      <% text_color   = stage_colors[stage][:text] %>
-      <% border_color = stage_colors[stage][:border] %>
+  <div
+    class="flex gap-4 overflow-x-auto pb-6"
+    data-controller="pipeline"
+    data-pipeline-move-url-value="<%= move_stage_dashboard_pipelines_path %>"
+    data-pipeline-csrf-token-value="<%= form_authenticity_token %>">
 
-      <div class="flex-shrink-0 w-56">
+    <% @stages.each do |stage| %>
+      <% leads  = @leads_by_stage[stage] || [] %>
+      <% color  = stage_colors[stage] %>
+      <% label  = stage_labels[stage] %>
+
+      <div class="flex-shrink-0 w-60">
+
         <%# Column Header %>
         <div class="flex items-center justify-between mb-3 px-1">
-          <span class="text-sm font-medium <%= text_color %>"><%= stage %></span>
-          <span class="badge badge-sm bg-transparent border <%= border_color %> <%= text_color %>">
+          <span class="text-sm font-medium <%= color[:text] %>"><%= label %></span>
+          <span class="badge badge-sm bg-transparent border <%= color[:border] %> <%= color[:text] %>"
+                data-count-stage="<%= stage %>">
             <%= leads.size %>
           </span>
         </div>
 
-        <%# Cards %>
-        <div class="space-y-3" data-controller="sortable">
+        <%# Droppable Column %>
+        <div
+          class="min-h-20 rounded-lg p-1 space-y-3"
+          data-pipeline-stage="<%= stage %>">
+
           <% leads.each do |lead| %>
-            <div class="card bg-base-100 border border-base-200 hover:border-base-300 hover:shadow-sm transition-all cursor-pointer">
+            <div
+              class="card bg-base-100 border border-base-200 hover:border-base-300 hover:shadow-sm transition-all select-none"
+              data-lead-id="<%= lead.id %>"
+              style="cursor: grab;">
               <div class="card-body p-3 gap-2">
+
+                <%# Company + overdue indicator %>
                 <div class="flex items-start justify-between gap-2">
-                  <p class="text-sm font-medium text-base-content leading-tight"><%= lead[:company] %></p>
-                  <%= icon "exclamation-triangle", library: "heroicons", class: "size-4 text-error shrink-0 mt-0.5" %>
+                  <p class="text-sm font-semibold text-base-content leading-tight">
+                    <%= lead.company_name %>
+                  </p>
+                  <% if lead.overdue? %>
+                    <span class="tooltip tooltip-left" data-tip="Overdue">
+                      <%= icon "exclamation-triangle", library: "heroicons", class: "size-4 text-error shrink-0 mt-0.5" %>
+                    </span>
+                  <% end %>
                 </div>
-                <p class="text-xs text-base-content/50"><%= lead[:contact] %></p>
+
+                <%# Contact name %>
+                <p class="text-xs text-base-content/50"><%= lead.contact_name %></p>
+
+                <%# Owner + Next Action Date %>
                 <div class="flex items-center justify-between mt-1">
                   <div class="flex items-center gap-1 text-xs text-base-content/50">
                     <%= icon "user", library: "heroicons", class: "size-3" %>
-                    <span><%= lead[:role] %></span>
+                    <span><%= lead.owner&.display_name&.split&.first || "—" %></span>
                   </div>
-                  <div class="flex items-center gap-1 text-xs text-error">
+                  <div class="flex items-center gap-1 text-xs <%= lead.overdue? ? 'text-error font-medium' : 'text-base-content/50' %>">
                     <%= icon "calendar", library: "heroicons", class: "size-3" %>
-                    <span><%= lead[:date] %></span>
+                    <span><%= lead.next_action_date&.strftime("%b %-d") || "—" %></span>
                   </div>
                 </div>
-                <div class="mt-1">
-                  <span class="badge badge-ghost badge-sm text-xs"><%= lead[:source] %></span>
+
+                <%# Source + View link %>
+                <div class="flex items-center justify-between mt-1">
+                  <span class="badge badge-ghost badge-sm text-xs"><%= lead.source.humanize %></span>
+                  <%= link_to "View →", dashboard_lead_path(lead),
+                        class: "text-xs text-primary hover:underline" %>
                 </div>
+
               </div>
             </div>
           <% end %>
+
         </div>
       </div>
     <% end %>
   </div>
-
 </div>
 
-<%# Add Lead Modal %>
+<%# Add Lead Modal — reuse same form as leads index %>
 <dialog id="add_lead_modal" class="modal">
   <div class="modal-box w-11/12 max-w-2xl">
     <div class="flex items-center justify-between mb-6">
@@ -86,7 +136,9 @@
       </button>
     </div>
 
-    <%= form_with url: dashboard_pipelines_path, method: :post, class: "space-y-4" do |f| %>
+    <%= form_with model: [:dashboard, Lead.new], method: :post,
+          data: { controller: "lead-form" },
+          class: "space-y-4" do |f| %>
 
       <div class="grid grid-cols-2 gap-4">
         <div class="form-control">
@@ -116,8 +168,8 @@
           <%= f.telephone_field :phone, class: "input input-bordered w-full" %>
         </div>
         <div class="form-control">
-          <%= f.label :lead_value, "Lead Value ($)", class: "label label-text text-sm" %>
-          <%= f.number_field :lead_value, class: "input input-bordered w-full", min: 0 %>
+          <%= f.label :lead_value_estimate, "Lead Value ($)", class: "label label-text text-sm" %>
+          <%= f.number_field :lead_value_estimate, class: "input input-bordered w-full", min: 0, step: 0.01 %>
         </div>
       </div>
 
@@ -125,16 +177,13 @@
         <div class="form-control">
           <%= f.label :source, "Source", class: "label label-text text-sm" %>
           <%= f.select :source,
-            ["LinkedIn", "Apollo", "Website", "Referral", "Manual", "Other"],
-            {},
-            class: "select select-bordered w-full" %>
+                Lead.sources.keys.map { |s| [s.humanize, s] },
+                {},
+                class: "select select-bordered w-full" %>
         </div>
         <div class="form-control">
           <%= f.label :industry, "Industry", class: "label label-text text-sm" %>
-          <%= f.select :industry,
-            ["Technology", "Healthcare", "Finance", "Education", "Retail", "Legal", "Real Estate", "Energy", "Other"],
-            { prompt: "Select..." },
-            class: "select select-bordered w-full" %>
+          <%= f.text_field :industry, placeholder: "e.g. Healthcare, Technology...", class: "input input-bordered w-full" %>
         </div>
       </div>
 
@@ -142,39 +191,35 @@
         <div class="form-control">
           <%= f.label :stage, "Stage", class: "label label-text text-sm" %>
           <%= f.select :stage,
-            Dashboard::PipelinesController::STAGES,
-            {},
-            class: "select select-bordered w-full" %>
+                Lead.stages.keys.map { |s| [stage_labels[s], s] },
+                {},
+                class: "select select-bordered w-full" %>
         </div>
         <div class="form-control">
-          <%= f.label :assigned_to, "Assigned To *", class: "label label-text text-sm" %>
-          <%= f.select :assigned_to,
-            [],
-            { prompt: "Select agent..." },
-            class: "select select-bordered w-full", required: true %>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div class="form-control">
-          <%= f.label :next_action, "Next Action", class: "label label-text text-sm" %>
-          <%= f.text_field :next_action, class: "input input-bordered w-full" %>
-        </div>
-        <div class="form-control">
-          <%= f.label :next_action_date, "Next Action Date", class: "label label-text text-sm" %>
-          <%= f.date_field :next_action_date, class: "input input-bordered w-full" %>
+          <%= f.label :assigned_to_id, "Assigned To", class: "label label-text text-sm" %>
+          <%= f.select :assigned_to_id,
+                User.where(active_status: true).map { |u| [u.display_name, u.id] },
+                { prompt: "Select agent..." },
+                class: "select select-bordered w-full" %>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div class="form-control">
           <%= f.label :last_contact_date, "Last Contact Date", class: "label label-text text-sm" %>
-          <%= f.date_field :last_contact_date, class: "input input-bordered w-full" %>
+          <%= f.date_field :last_contact_date, class: "input input-bordered w-full",
+                data: { "lead-form-target": "lastContactDate", action: "change->lead-form#autoNextActionDate" } %>
         </div>
         <div class="form-control">
-          <%= f.label :tags, "Tags", class: "label label-text text-sm" %>
-          <%= f.text_field :tags, placeholder: "comma separated", class: "input input-bordered w-full" %>
+          <%= f.label :next_action_date, "Next Action Date", class: "label label-text text-sm" %>
+          <%= f.date_field :next_action_date, class: "input input-bordered w-full",
+                data: { "lead-form-target": "nextActionDate" } %>
         </div>
+      </div>
+
+      <div class="form-control">
+        <%= f.label :next_action, "Next Action", class: "label label-text text-sm" %>
+        <%= f.text_field :next_action, class: "input input-bordered w-full" %>
       </div>
 
       <div class="form-control">
@@ -191,7 +236,6 @@
 
     <% end %>
   </div>
-  <form method="dialog" class="modal-backdrop">
-    <button>close</button>
-  </form>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
 </dialog>
+ 

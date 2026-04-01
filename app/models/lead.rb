@@ -47,9 +47,12 @@ class Lead < ApplicationRecord
   validates :removal_reason, presence: true, if: :removed?
 
   # ── Callbacks ───────────────────────────────────────────────────────────────
+  # Set this to true before saving if the caller will manually log movement history
+  attr_accessor :skip_movement_log
+
   before_create :set_date_added
-  before_save   :log_stage_change, if: :stage_changed?
-  before_save   :log_status_change, if: :status_changed?
+  before_save   :log_stage_change,  if: -> { stage_changed? && !skip_movement_log }
+  before_save   :log_status_change, if: -> { status_changed? && !skip_movement_log }
 
   # ── Scopes ──────────────────────────────────────────────────────────────────
   scope :active_leads,    -> { where(status: :active) }

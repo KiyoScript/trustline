@@ -47,6 +47,7 @@ class Dashboard::LeadsController < ApplicationController
 
   def update
     @lead.last_updated_by = current_user
+    @lead.skip_movement_log = false
 
     if @lead.update(lead_params)
       # Log reassignment if owner changed

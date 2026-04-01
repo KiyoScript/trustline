@@ -28,13 +28,17 @@ Rails.application.routes.draw do
     root to: "dashboard#index", as: :authenticated_root
 
     namespace :dashboard do
-      resources :pipelines, only: [ :index ]
+      resources :pipelines, only: [ :index ] do
+        collection do
+          patch :move_stage
+        end
+      end
       resources :leads,          only: [ :index, :create, :show, :edit, :update, :destroy ]
       resources :activities,     only: [ :index, :create, :show, :edit, :update, :destroy ]
       resources :productivities, only: [ :index ]
-      resources :reports, only: [ :index ]
-      resources :teams, only: [ :index, :create ]
-      resources :settings, only: [ :index ]
+      resources :reports,        only: [ :index ]
+      resources :teams,          only: [ :index, :create ]
+      resources :settings,       only: [ :index ]
     end
   end
 
