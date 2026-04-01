@@ -1,15 +1,39 @@
-<div id="flash-toasts">
-  <% if flash.any? %>
-    <div class="toast toast-top toast-end z-100">
-      <% flash.each do |type, message| %>
-        <% next if type == "import_errors" %>
-        <div data-controller="toast"
-             class="alert <%= flash_class(type) %> shadow-lg flex items-center gap-2">
-          <%= flash_icon(type) %>
-          <span><%= message %></span>
-          <button data-action="click->toast#dismiss" class="btn btn-ghost btn-xs ml-auto">✕</button>
-        </div>
-      <% end %>
+<%# app/views/shared/_flash.html.erb %>
+
+<% flash_classes = {
+  "notice"  => { bg: "bg-success/10 border-success/30",  icon: "check-circle",       text: "text-success",  icon_color: "text-success" },
+  "alert"   => { bg: "bg-error/10 border-error/30",      icon: "exclamation-circle",  text: "text-error",    icon_color: "text-error" },
+  "warning" => { bg: "bg-warning/10 border-warning/30",  icon: "exclamation-triangle",text: "text-warning",  icon_color: "text-warning" },
+  "info"    => { bg: "bg-info/10 border-info/30",         icon: "information-circle",  text: "text-info",     icon_color: "text-info" },
+} %>
+
+<div class="fixed top-16 right-5 z-50 flex flex-col gap-2 pointer-events-none" id="toast-container">
+  <% flash.each do |type, message| %>
+    <% style = flash_classes[type] || flash_classes["info"] %>
+    <div
+      data-controller="toast"
+      data-toast-duration-value="4000"
+      class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg
+             bg-base-100 <%= style[:bg] %>
+             min-w-72 max-w-sm
+             translate-x-full opacity-0
+             transition-all duration-300 ease-out">
+
+      <%# Icon %>
+      <div class="shrink-0 mt-0.5">
+        <%= icon style[:icon], library: "heroicons", class: "size-5 #{style[:icon_color]}" %>
+      </div>
+
+      <%# Message %>
+      <p class="text-sm text-base-content flex-1 leading-snug"><%= message %></p>
+
+      <%# Close button %>
+      <button
+        data-action="click->toast#dismiss"
+        class="shrink-0 text-base-content/30 hover:text-base-content/60 transition-colors mt-0.5">
+        <%= icon "x-mark", library: "heroicons", class: "size-4" %>
+      </button>
+
     </div>
   <% end %>
 </div>

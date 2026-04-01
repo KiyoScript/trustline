@@ -42,7 +42,12 @@ Rails.application.routes.draw do
           patch :toggle_status
         end
       end
-      resources :settings, only: [ :index ]
+      resource :settings, only: [ :show ] do
+        collection do
+          patch :update_profile
+          patch :update_password
+        end
+      end
     end
   end
 

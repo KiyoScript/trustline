@@ -26,7 +26,7 @@
                        name="theme-dropdown"
                        class="radio radio-xs"
                        value="<%= t %>"
-                       onclick="document.documentElement.setAttribute('data-theme', this.value); localStorage.setItem('hr-theme', this.value)">
+                       onclick="document.documentElement.setAttribute('data-theme', this.value); localStorage.setItem('tl-theme', this.value)">
               </label>
             </li>
           <% end %>
@@ -39,48 +39,49 @@
       <div tabindex="0" role="button" class="btn btn-ghost btn-sm flex items-center gap-2 pr-2">
         <div class="avatar avatar-placeholder">
           <div class="bg-primary text-primary-content rounded-full size-8">
-            <span class="text-sm font-bold">
-              <%= current_user.email.first.upcase %>
-            </span>
+            <span class="text-sm font-bold"><%= current_user.initials %></span>
           </div>
         </div>
         <div class="hidden sm:flex flex-col items-start leading-none gap-1">
-          <span class="text-sm font-medium">
-            <%= current_user.email %>
+          <span class="text-sm font-medium"><%= current_user.display_name %></span>
+          <span class="badge badge-primary badge-soft badge-xs capitalize">
+            <%= current_user.role.humanize.gsub("_", " ") %>
           </span>
-            <span class="badge badge-primary badge-soft badge-xs capitalize">
-              Agent
-            </span>          
         </div>
         <%= icon "chevron-down", library: "heroicons", class: "size-4 opacity-50" %>
       </div>
 
-      <ul tabindex="0" class="dropdown-content menu menu-sm mt-3 p-2 shadow-lg bg-base-100 border border-base-300 rounded-box w-56 z-50">
+      <ul tabindex="0" class="dropdown-content menu menu-sm mt-3 p-2 shadow-lg bg-base-100 border border-base-300 rounded-box w-64 z-50">
+
         <%# User info header %>
-        <li class="px-3 py-2">
-          <p class="text-xs font-semibold text-base-content/70">
-            current_user.email %>
-          </p>
-          <p class="text-xs text-base-content/40">
-            TRUSTLINE AGENT
+        <li class="px-3 py-2 pointer-events-none">
+          <p class="text-sm font-semibold text-base-content"><%= current_user.display_name %></p>
+          <p class="text-xs text-base-content/40 mt-0.5"><%= current_user.email %></p>
+          <p class="text-xs text-base-content/40 mt-0.5 capitalize">
+            <%= current_user.role.humanize.gsub("_", " ") %>
+            <% if current_user.team.present? %>
+              · <%= current_user.team %>
+            <% end %>
           </p>
         </li>
+
         <div class="divider my-0"></div>
 
         <li>
-          <%= link_to "#", class: "gap-2" do %>
-            <%= icon "user", library: "heroicons", class: "size-4" %>
-            Profile
+          <%= link_to dashboard_settings_path, class: "gap-2" do %>
+            <%= icon "user-circle", library: "heroicons", class: "size-4" %>
+            Profile & Settings
           <% end %>
         </li>
 
-        <%# Settings — GM and HR only %>
-        <li>
-          <%= link_to "#", class: "gap-2" do %>
-            <%= icon "cog-6-tooth", library: "heroicons", class: "size-4" %>
-            Settings
-          <% end %>
-        </li>
+        <% if can_manage_team? %>
+          <li>
+            <%= link_to dashboard_teams_path, class: "gap-2" do %>
+              <%= icon "user-group", library: "heroicons", class: "size-4" %>
+              Team Management
+            <% end %>
+          </li>
+        <% end %>
 
         <div class="divider my-0"></div>
 
@@ -92,8 +93,17 @@
             Logout
           <% end %>
         </li>
+
       </ul>
     </div>
 
   </div>
 </nav>
+
+<%# Restore saved theme on page load %>
+<script>
+  (function() {
+    const theme = localStorage.getItem("tl-theme");
+    if (theme) document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>

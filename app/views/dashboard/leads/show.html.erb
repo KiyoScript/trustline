@@ -120,6 +120,55 @@
         </div>
       </div>
 
+      <%# Activities %>
+      <% if @activities.any? %>
+        <div class="card bg-base-100 border border-base-300">
+          <div class="card-body p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="font-medium text-base-content">Activities (<%= @activities.size %>)</h2>
+              <button
+                onclick="document.getElementById('log_activity_modal').showModal()"
+                class="btn btn-ghost btn-xs gap-1">
+                <%= icon "plus", library: "heroicons", class: "size-3" %>
+                Log Activity
+              </button>
+            </div>
+            <div class="space-y-0 divide-y divide-base-100">
+              <% @activities.each do |activity| %>
+                <div class="flex items-start gap-3 py-3">
+                  <div class="size-8 rounded-full bg-base-200 flex items-center justify-center shrink-0 mt-0.5">
+                    <span class="text-xs font-bold text-base-content/60"><%= activity.user.initials %></span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-base-content">
+                      <span class="text-primary"><%= activity.type_label %></span>
+                      <span class="text-base-content/50 font-normal">by <%= activity.user.display_name %></span>
+                    </p>
+                    <% if activity.notes.present? %>
+                      <p class="text-xs text-base-content/60 mt-0.5"><%= activity.notes %></p>
+                    <% end %>
+                    <% if activity.result.present? %>
+                      <p class="text-xs font-medium text-base-content mt-0.5">Result: <%= activity.result %></p>
+                    <% end %>
+                    <% if activity.next_step.present? %>
+                      <p class="text-xs text-primary mt-0.5">
+                        Next: <%= activity.next_step %>
+                        <% if activity.next_step_date.present? %>
+                          · <%= activity.next_step_date.strftime("%b %-d, %Y") %>
+                        <% end %>
+                      </p>
+                    <% end %>
+                  </div>
+                  <span class="text-xs text-base-content/30 shrink-0 whitespace-nowrap">
+                    <%= activity.activity_date.strftime("%b %-d, %Y") %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
       <%# Movement History %>
       <div class="card bg-base-100 border border-base-300">
         <div class="card-body p-5">

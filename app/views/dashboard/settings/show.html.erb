@@ -1,0 +1,188 @@
+<%# app/views/dashboard/settings/show.html.erb %>
+
+<div class="p-6 bg-base-200 min-h-screen">
+
+  <%# Header %>
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-base-content">Settings</h1>
+    <p class="text-sm text-base-content/50 mt-0.5">Manage your account and preferences</p>
+  </div>
+
+  <div class="grid grid-cols-3 gap-6">
+
+    <%# Left Nav %>
+    <div class="col-span-1">
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body p-2">
+          <ul class="menu menu-sm w-full gap-0.5">
+            <li>
+              <a href="#profile" class="flex items-center gap-3 py-2.5 font-medium">
+                <%= icon "user-circle", library: "heroicons", class: "size-5 text-base-content/50" %>
+                Profile
+              </a>
+            </li>
+            <li>
+              <a href="#password" class="flex items-center gap-3 py-2.5">
+                <%= icon "lock-closed", library: "heroicons", class: "size-5 text-base-content/50" %>
+                Password
+              </a>
+            </li>
+            <li>
+              <a href="#appearance" class="flex items-center gap-3 py-2.5">
+                <%= icon "paint-brush", library: "heroicons", class: "size-5 text-base-content/50" %>
+                Appearance
+              </a>
+            </li>
+            <% if current_user.super_admin? || current_user.admin? %>
+              <div class="divider my-1"></div>
+              <li>
+                <a href="#danger" class="flex items-center gap-3 py-2.5 text-error">
+                  <%= icon "exclamation-triangle", library: "heroicons", class: "size-5" %>
+                  Danger Zone
+                </a>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <%# Right Content %>
+    <div class="col-span-2 space-y-5">
+
+      <%# Profile Section %>
+      <div id="profile" class="card bg-base-100 border border-base-300">
+        <div class="card-body p-6">
+          <div class="mb-5">
+            <h2 class="font-medium text-base-content">Profile</h2>
+            <p class="text-xs text-base-content/50 mt-0.5">Update your personal information</p>
+          </div>
+
+          <%# Avatar %>
+          <div class="flex items-center gap-4 mb-6">
+            <div class="avatar avatar-placeholder">
+              <div class="bg-primary/10 text-primary rounded-full size-16">
+                <span class="text-xl font-bold"><%= current_user.initials %></span>
+              </div>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-base-content"><%= current_user.display_name %></p>
+              <p class="text-xs text-base-content/50 mt-0.5 capitalize"><%= current_user.role.humanize.gsub("_", " ") %></p>
+              <p class="text-xs text-base-content/40 mt-0.5"><%= current_user.team.presence || "No team assigned" %></p>
+            </div>
+          </div>
+
+          <%= form_with url: update_profile_dashboard_settings_path, method: :patch, class: "space-y-4" do |f| %>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label label-text text-sm">Full Name</label>
+                <input type="text" name="user[full_name]" value="<%= current_user.full_name %>"
+                       placeholder="Your full name" class="input input-bordered w-full" />
+              </div>
+              <div class="form-control">
+                <label class="label label-text text-sm">Email Address</label>
+                <input type="email" name="user[email]" value="<%= current_user.email %>"
+                       class="input input-bordered w-full" />
+              </div>
+            </div>
+            <div class="form-control">
+              <label class="label label-text text-sm">Team</label>
+              <input type="text" name="user[team]" value="<%= current_user.team %>"
+                     placeholder="e.g. Sales, BD" class="input input-bordered w-full max-w-xs" />
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Password Section %>
+      <div id="password" class="card bg-base-100 border border-base-300">
+        <div class="card-body p-6">
+          <div class="mb-5">
+            <h2 class="font-medium text-base-content">Password</h2>
+            <p class="text-xs text-base-content/50 mt-0.5">Change your account password</p>
+          </div>
+
+          <%= form_with url: update_password_dashboard_settings_path, method: :patch, class: "space-y-4" do |f| %>
+            <div class="form-control">
+              <label class="label label-text text-sm">Current Password</label>
+              <label class="input input-bordered flex items-center gap-2 w-full focus-within:input-primary transition-colors">
+                <%= icon "lock-closed", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+                <input type="password" name="user[current_password]" placeholder="••••••••"
+                       class="grow bg-transparent outline-none min-w-0" />
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label label-text text-sm">New Password</label>
+                <label class="input input-bordered flex items-center gap-2 w-full focus-within:input-primary transition-colors">
+                  <%= icon "lock-closed", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+                  <input type="password" name="user[password]" placeholder="••••••••"
+                         class="grow bg-transparent outline-none min-w-0" />
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label label-text text-sm">Confirm Password</label>
+                <label class="input input-bordered flex items-center gap-2 w-full focus-within:input-primary transition-colors">
+                  <%= icon "shield-check", library: "heroicons", class: "size-4 text-base-content/40 shrink-0" %>
+                  <input type="password" name="user[password_confirmation]" placeholder="••••••••"
+                         class="grow bg-transparent outline-none min-w-0" />
+                </label>
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="btn btn-primary btn-sm">Update Password</button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Appearance Section %>
+      <div id="appearance" class="card bg-base-100 border border-base-300">
+        <div class="card-body p-6">
+          <div class="mb-5">
+            <h2 class="font-medium text-base-content">Appearance</h2>
+            <p class="text-xs text-base-content/50 mt-0.5">Customize how the app looks</p>
+          </div>
+          <div class="form-control">
+            <label class="label label-text text-sm font-medium">Theme</label>
+            <select class="select select-bordered w-full max-w-xs"
+                    onchange="document.documentElement.setAttribute('data-theme', this.value)">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="cupcake">Cupcake</option>
+              <option value="corporate">Corporate</option>
+              <option value="nord">Nord</option>
+              <option value="sunset">Sunset</option>
+            </select>
+            <label class="label">
+              <span class="label-text-alt text-base-content/40">Changes apply instantly as a preview</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <%# Danger Zone — admin only %>
+      <% if current_user.super_admin? || current_user.admin? %>
+        <div id="danger" class="card bg-base-100 border border-error/30">
+          <div class="card-body p-6">
+            <div class="mb-5">
+              <h2 class="font-medium text-error">Danger Zone</h2>
+              <p class="text-xs text-base-content/50 mt-0.5">Irreversible and destructive actions</p>
+            </div>
+            <div class="flex items-center justify-between py-4 border-t border-base-200">
+              <div>
+                <p class="text-sm font-medium text-base-content">Sign out of all devices</p>
+                <p class="text-xs text-base-content/50 mt-0.5">Revoke all active sessions</p>
+              </div>
+              <button class="btn btn-outline btn-error btn-sm">Sign out all</button>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+    </div>
+  </div>
+</div>

@@ -13,7 +13,7 @@ class Dashboard::LeadsController < ApplicationController
 
   def show
     @movement_histories = @lead.movement_histories.includes(:changed_by).order(timestamp: :desc)
-    @activities         = @lead.activities.includes(:user).order(activity_date: :desc) rescue []
+    @activities         = @lead.activities.includes(:user).order(activity_date: :desc)
   end
 
   def edit
@@ -47,7 +47,7 @@ class Dashboard::LeadsController < ApplicationController
 
   def update
     @lead.last_updated_by = current_user
-    @lead.skip_movement_log = false
+    @lead.skip_movement_log = false  # allow callbacks for stage/status changes via edit form
 
     if @lead.update(lead_params)
       # Log reassignment if owner changed

@@ -17,7 +17,7 @@
 
       <li class="menu-title is-drawer-close:hidden text-xs text-base-content/30 uppercase tracking-widest px-2 mb-1">Main</li>
 
-      <%# Dashboard %>
+      <%# Dashboard — everyone %>
       <li>
         <% home_path = authenticated_root_path %>
         <%= link_to home_path,
@@ -28,75 +28,87 @@
         <% end %>
       </li>
 
-      <%# Pipeline %>
-      <li>
-        <% pipeline_path = dashboard_pipelines_path %>
-        <%= link_to pipeline_path,
-              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(pipeline_path)}",
-              "data-tip": "Pipeline" do %>
-          <%= icon "view-columns", library: "heroicons", class: "size-6 shrink-0" %>
-          <span class="is-drawer-close:hidden">Pipeline</span>
-        <% end %>
-      </li>
+      <%# Pipeline — everyone except viewer %>
+      <% unless current_user.viewer? %>
+        <li>
+          <% pipeline_path = dashboard_pipelines_path %>
+          <%= link_to pipeline_path,
+                class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(pipeline_path)}",
+                "data-tip": "Pipeline" do %>
+            <%= icon "view-columns", library: "heroicons", class: "size-6 shrink-0" %>
+            <span class="is-drawer-close:hidden">Pipeline</span>
+          <% end %>
+        </li>
+      <% end %>
 
-      <%# Leads %>
-      <li>
-        <% leads_path = dashboard_leads_path %>
-        <%= link_to leads_path,
-              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(leads_path)}",
-              "data-tip": "Leads" do %>
-          <%= icon "users", library: "heroicons", class: "size-6 shrink-0" %>
-          <span class="is-drawer-close:hidden">Leads</span>
-        <% end %>
-      </li>
+      <%# Leads — everyone except viewer %>
+      <% unless current_user.viewer? %>
+        <li>
+          <% leads_path = dashboard_leads_path %>
+          <%= link_to leads_path,
+                class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(leads_path)}",
+                "data-tip": "Leads" do %>
+            <%= icon "users", library: "heroicons", class: "size-6 shrink-0" %>
+            <span class="is-drawer-close:hidden">Leads</span>
+          <% end %>
+        </li>
+      <% end %>
 
-      <%# Activities %>
-      <li>
-        <% activities_path = dashboard_activities_path %>
-        <%= link_to activities_path,
-              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(activities_path)}",
-              "data-tip": "Activities" do %>
-          <%= icon "bolt", library: "heroicons", class: "size-6 shrink-0" %>
-          <span class="is-drawer-close:hidden">Activities</span>
-        <% end %>
-      </li>
+      <%# Activities — everyone except viewer %>
+      <% unless current_user.viewer? %>
+        <li>
+          <% activities_path = dashboard_activities_path %>
+          <%= link_to activities_path,
+                class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(activities_path)}",
+                "data-tip": "Activities" do %>
+            <%= icon "bolt", library: "heroicons", class: "size-6 shrink-0" %>
+            <span class="is-drawer-close:hidden">Activities</span>
+          <% end %>
+        </li>
+      <% end %>
 
-      <%# Productivity %>
-      <li>
-        <% productivity_path = dashboard_productivities_path %>
-        <%= link_to productivity_path,
-              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(productivity_path)}",
-              "data-tip": "Productivity" do %>
-          <%= icon "chart-bar", library: "heroicons", class: "size-6 shrink-0" %>
-          <span class="is-drawer-close:hidden">Productivity</span>
-        <% end %>
-      </li>
+      <%# Productivity — managers and above %>
+      <% if can_view_all_leads? %>
+        <li>
+          <% productivity_path = dashboard_productivities_path %>
+          <%= link_to productivity_path,
+                class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(productivity_path)}",
+                "data-tip": "Productivity" do %>
+            <%= icon "chart-bar", library: "heroicons", class: "size-6 shrink-0" %>
+            <span class="is-drawer-close:hidden">Productivity</span>
+          <% end %>
+        </li>
+      <% end %>
 
-      <%# Reports %>
-      <li>
-        <% reports_path = dashboard_reports_path %>
-        <%= link_to reports_path,
-              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(reports_path)}",
-              "data-tip": "Reports" do %>
-          <%= icon "document-chart-bar", library: "heroicons", class: "size-6 shrink-0" %>
-          <span class="is-drawer-close:hidden">Reports</span>
-        <% end %>
-      </li>
+      <%# Reports — managers and above %>
+      <% if can_access_reports? %>
+        <li>
+          <% reports_path = dashboard_reports_path %>
+          <%= link_to reports_path,
+                class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(reports_path)}",
+                "data-tip": "Reports" do %>
+            <%= icon "document-chart-bar", library: "heroicons", class: "size-6 shrink-0" %>
+            <span class="is-drawer-close:hidden">Reports</span>
+          <% end %>
+        </li>
+      <% end %>
 
-      <%# Teams %>
-      <li>
-        <% teams_path = dashboard_teams_path %>
-        <%= link_to teams_path,
-              class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(teams_path)}",
-              "data-tip": "Teams" do %>
-          <%= icon "user-group", library: "heroicons", class: "size-6 shrink-0" %>
-          <span class="is-drawer-close:hidden">Teams</span>
-        <% end %>
-      </li>
+      <%# Teams — admin and above only %>
+      <% if can_manage_team? %>
+        <li>
+          <% teams_path = dashboard_teams_path %>
+          <%= link_to teams_path,
+                class: "flex items-center gap-3 py-2.5 is-drawer-close:tooltip is-drawer-close:tooltip-right #{'bg-base-200 font-semibold' if current_page?(teams_path)}",
+                "data-tip": "Teams" do %>
+            <%= icon "user-group", library: "heroicons", class: "size-6 shrink-0" %>
+            <span class="is-drawer-close:hidden">Teams</span>
+          <% end %>
+        </li>
+      <% end %>
 
       <div class="divider my-1 is-drawer-close:hidden"></div>
 
-      <%# Settings %>
+      <%# Settings — everyone %>
       <li>
         <% settings_path = dashboard_settings_path %>
         <%= link_to settings_path,
@@ -113,19 +125,17 @@
     <div class="border-t border-base-300 px-3 py-3 flex items-center gap-3">
       <div class="avatar avatar-placeholder shrink-0">
         <div class="bg-neutral text-neutral-content rounded-full size-9">
-          <span class="text-xs font-bold">
-            <%= current_user.email.first.upcase %>
-          </span>
+          <span class="text-xs font-bold"><%= current_user.initials %></span>
         </div>
       </div>
       <div class="is-drawer-close:hidden overflow-hidden flex-1">
-        <p class="text-xs font-medium truncate"><%= current_user.email %></p>
-        <p class="text-xs text-base-content/50 capitalize"><%= current_user.role rescue "Agent" %></p>
+        <p class="text-xs font-medium truncate"><%= current_user.display_name %></p>
+        <p class="text-xs text-base-content/50 capitalize"><%= current_user.role.humanize.gsub("_", " ") %></p>
       </div>
-      <%= link_to destroy_user_session_path, method: :delete,
-            class: "is-drawer-close:hidden btn btn-ghost btn-xs btn-circle ml-auto",
-            "data-tip": "Sign out",
-            title: "Sign out" do %>
+      <%= link_to destroy_user_session_path,
+            data: { turbo_method: :delete },
+            class: "is-drawer-close:hidden btn btn-ghost btn-xs btn-circle ml-auto tooltip",
+            "data-tip": "Sign out" do %>
         <%= icon "arrow-right-on-rectangle", library: "heroicons", class: "size-4 text-base-content/50" %>
       <% end %>
     </div>
