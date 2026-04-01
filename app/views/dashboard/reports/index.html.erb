@@ -14,11 +14,23 @@
         <%= icon "arrow-left", library: "heroicons", class: "size-4" %>
         Prev Week
       <% end %>
-      <button onclick="window.print()" class="cursor-pointer rounded-md border border-base-300 bg-base-100 px-4 py-2 text-sm text-base-content/60 hover:bg-base-200 transition flex items-center gap-2">
+
+      <% unless @is_current %>
+        <%= link_to dashboard_reports_path(week_offset: @week_offset + 1),
+              class: "cursor-pointer rounded-md border border-base-300 bg-base-100 px-4 py-2 text-sm text-base-content/60 hover:bg-base-200 transition flex items-center gap-2" do %>
+          Next Week
+          <%= icon "arrow-right", library: "heroicons", class: "size-4" %>
+        <% end %>
+      <% end %>
+
+      <%= link_to dashboard_reports_path(week_offset: @week_offset, format: :csv),
+            class: "cursor-pointer rounded-md border border-base-300 bg-base-100 px-4 py-2 text-sm text-base-content/60 hover:bg-base-200 transition flex items-center gap-2" do %>
         <%= icon "arrow-down-tray", library: "heroicons", class: "size-4" %>
         CSV
-      </button>
-      <button onclick="window.print()" class="cursor-pointer rounded-md border border-base-300 bg-base-100 px-4 py-2 text-sm text-base-content/60 hover:bg-base-200 transition flex items-center gap-2">
+      <% end %>
+
+      <button onclick="window.print()"
+              class="cursor-pointer rounded-md border border-base-300 bg-base-100 px-4 py-2 text-sm text-base-content/60 hover:bg-base-200 transition flex items-center gap-2">
         <%= icon "printer", library: "heroicons", class: "size-4" %>
         Print
       </button>
@@ -31,11 +43,12 @@
       <p class="text-sm font-medium text-base-content">
         Week of <%= @week_start.strftime("%A, %B %-d") %> — <%= @week_end.strftime("%A, %B %-d, %Y") %>
       </p>
+      <span class="text-xs text-base-content/40">Week <%= @week_number %></span>
       <% if @is_current %>
         <span class="badge badge-primary badge-sm">Current</span>
       <% end %>
       <% unless @week_offset == 0 %>
-        <%= link_to "Back to current", dashboard_reports_path(week_offset: 0),
+        <%= link_to "Back to current week →", dashboard_reports_path,
               class: "ml-auto text-xs text-primary hover:underline" %>
       <% end %>
     </div>
@@ -57,7 +70,9 @@
     </div>
     <div class="card bg-base-100 border border-base-300">
       <div class="card-body p-5 items-center text-center gap-1">
-        <p class="text-3xl font-bold text-success"><%= @net_growth %></p>
+        <p class="text-3xl font-bold <%= @net_growth >= 0 ? 'text-success' : 'text-error' %>">
+          <%= @net_growth >= 0 ? "+#{@net_growth}" : @net_growth %>
+        </p>
         <p class="text-sm text-base-content/50">Net Growth</p>
       </div>
     </div>
@@ -108,13 +123,22 @@
                 </tr>
               </thead>
               <tbody>
-                <% @team_summary.each do |agent| %>
-                  <tr class="border-b border-base-100">
-                    <td class="py-2.5 text-sm text-base-content"><%= agent[:name] %></td>
-                    <td class="py-2.5 text-center text-sm text-success">+<%= agent[:added] %></td>
-                    <td class="py-2.5 text-center text-sm text-error">-<%= agent[:removed] %></td>
-                    <td class="py-2.5 text-center text-sm text-base-content/70"><%= agent[:moved] %></td>
-                    <td class="py-2.5 text-center text-sm text-base-content/70"><%= agent[:activities] %></td>
+                <% @team_summary.each do |s| %>
+                  <tr class="border-b border-base-100 hover:bg-base-50">
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <div class="avatar avatar-placeholder">
+                          <div class="bg-primary/10 text-primary rounded-full size-7">
+                            <span class="text-xs font-bold"><%= s[:user].initials %></span>
+                          </div>
+                        </div>
+                        <span class="text-sm font-medium text-base-content"><%= s[:user].display_name %></span>
+                      </div>
+                    </td>
+                    <td class="text-center text-sm text-success font-medium">+<%= s[:added] %></td>
+                    <td class="text-center text-sm text-error font-medium">-<%= s[:removed] %></td>
+                    <td class="text-center text-sm text-base-content/70"><%= s[:moved] %></td>
+                    <td class="text-center text-sm text-base-content/70"><%= s[:activities] %></td>
                   </tr>
                 <% end %>
               </tbody>
@@ -124,7 +148,7 @@
       </div>
     </div>
 
-    <%# Right column: Removals + Alerts %>
+    <%# Right column %>
     <div class="flex flex-col gap-3">
 
       <%# Removals by Reason %>
@@ -134,11 +158,11 @@
           <% if @removals_by_reason.empty? %>
             <p class="text-sm text-base-content/30">No removals this week</p>
           <% else %>
-            <div class="space-y-2">
-              <% @removals_by_reason.each do |removal| %>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-base-content/70"><%= removal[:reason] %></span>
-                  <span class="text-sm font-medium text-error"><%= removal[:count] %></span>
+            <div class="space-y-0 divide-y divide-base-200">
+              <% @removals_by_reason.each do |r| %>
+                <div class="flex items-center justify-between py-2">
+                  <span class="text-sm text-base-content/70"><%= r[:reason] %></span>
+                  <span class="text-sm font-bold text-error"><%= r[:count] %></span>
                 </div>
               <% end %>
             </div>
@@ -151,12 +175,18 @@
         <div class="card-body p-5">
           <h2 class="font-medium text-base-content mb-3">Alerts</h2>
           <div class="space-y-0 divide-y divide-base-200">
-            <% @alerts.each do |alert| %>
-              <div class="flex items-center justify-between py-2.5">
-                <span class="text-sm text-base-content/70"><%= alert[:label] %></span>
-                <span class="text-sm font-bold <%= alert[:color] %>"><%= alert[:count] %></span>
-              </div>
-            <% end %>
+            <div class="flex items-center justify-between py-2.5">
+              <span class="text-sm text-base-content/70">Overdue Actions</span>
+              <span class="text-sm font-bold <%= @overdue_count > 0 ? 'text-error' : 'text-base-content/40' %>">
+                <%= @overdue_count %>
+              </span>
+            </div>
+            <div class="flex items-center justify-between py-2.5">
+              <span class="text-sm text-base-content/70">Stagnant (7+ days)</span>
+              <span class="text-sm font-bold <%= @stagnant_count > 0 ? 'text-warning' : 'text-base-content/40' %>">
+                <%= @stagnant_count %>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -168,25 +198,42 @@
   <div class="card bg-base-100 border border-base-300 mb-3">
     <div class="card-body p-5">
       <h2 class="font-medium text-base-content mb-4">
-        Leads Added This Week (<%= @leads_added_list.size %>)
+        Leads Added This Week (<%= @leads_added %>)
       </h2>
       <% if @leads_added_list.empty? %>
         <p class="text-sm text-base-content/30 text-center py-4">None added</p>
       <% else %>
-        <div class="space-y-2">
-          <% @leads_added_list.each do |lead| %>
-            <div class="flex items-center justify-between py-2 border-b border-base-100">
-              <div class="flex items-center gap-2">
-                <%= icon "exclamation-triangle", library: "heroicons", class: "size-4 text-error" %>
-                <span class="text-sm font-medium text-base-content"><%= lead[:company] %></span>
-                <span class="text-xs text-base-content/50"><%= lead[:contact] %></span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="badge badge-ghost badge-sm"><%= lead[:stage] %></span>
-                <span class="text-xs text-base-content/40"><%= lead[:owner] %></span>
-              </div>
-            </div>
-          <% end %>
+        <div class="overflow-x-auto">
+          <table class="table table-sm w-full">
+            <thead>
+              <tr class="border-b border-base-200">
+                <th class="text-xs text-base-content/40 font-medium">Company</th>
+                <th class="text-xs text-base-content/40 font-medium">Contact</th>
+                <th class="text-xs text-base-content/40 font-medium">Stage</th>
+                <th class="text-xs text-base-content/40 font-medium">Source</th>
+                <th class="text-xs text-base-content/40 font-medium">Owner</th>
+                <th class="text-xs text-base-content/40 font-medium">Date Added</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @leads_added_list.each do |lead| %>
+                <tr class="border-b border-base-100 hover:bg-base-50">
+                  <td>
+                    <%= link_to lead.company_name,
+                          dashboard_lead_path(lead),
+                          class: "text-sm font-medium text-base-content hover:text-primary" %>
+                  </td>
+                  <td class="text-sm text-base-content/60"><%= lead.contact_name %></td>
+                  <td>
+                    <span class="badge badge-ghost badge-sm"><%= lead.stage.humanize.gsub("_", " ") %></span>
+                  </td>
+                  <td class="text-sm text-base-content/60"><%= lead.source.humanize %></td>
+                  <td class="text-sm text-base-content/60"><%= lead.owner&.display_name %></td>
+                  <td class="text-sm text-base-content/60"><%= lead.date_added&.strftime("%b %-d, %Y") %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       <% end %>
     </div>
@@ -196,24 +243,42 @@
   <div class="card bg-base-100 border border-base-300">
     <div class="card-body p-5">
       <h2 class="font-medium text-base-content mb-4">
-        Leads Removed This Week (<%= @leads_removed_list.size %>)
+        Leads Removed This Week (<%= @leads_removed %>)
       </h2>
       <% if @leads_removed_list.empty? %>
         <p class="text-sm text-base-content/30 text-center py-4">None removed</p>
       <% else %>
-        <div class="space-y-2">
-          <% @leads_removed_list.each do |lead| %>
-            <div class="flex items-center justify-between py-2 border-b border-base-100">
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-medium text-base-content"><%= lead[:company] %></span>
-                <span class="text-xs text-base-content/50"><%= lead[:contact] %></span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-xs text-base-content/50"><%= lead[:reason] %></span>
-                <span class="text-xs text-base-content/40"><%= lead[:removed_by] %></span>
-              </div>
-            </div>
-          <% end %>
+        <div class="overflow-x-auto">
+          <table class="table table-sm w-full">
+            <thead>
+              <tr class="border-b border-base-200">
+                <th class="text-xs text-base-content/40 font-medium">Company</th>
+                <th class="text-xs text-base-content/40 font-medium">Contact</th>
+                <th class="text-xs text-base-content/40 font-medium">Reason</th>
+                <th class="text-xs text-base-content/40 font-medium">Removed By</th>
+                <th class="text-xs text-base-content/40 font-medium">Date Removed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @leads_removed_list.each do |lead| %>
+                <tr class="border-b border-base-100 hover:bg-base-50">
+                  <td>
+                    <%= link_to lead.company_name,
+                          dashboard_lead_path(lead),
+                          class: "text-sm font-medium text-base-content hover:text-primary" %>
+                  </td>
+                  <td class="text-sm text-base-content/60"><%= lead.contact_name %></td>
+                  <td>
+                    <span class="badge badge-error badge-soft badge-sm">
+                      <%= lead.removal_reason.presence || "Not specified" %>
+                    </span>
+                  </td>
+                  <td class="text-sm text-base-content/60"><%= lead.last_updated_by&.display_name || "—" %></td>
+                  <td class="text-sm text-base-content/60"><%= lead.date_removed&.strftime("%b %-d, %Y") %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       <% end %>
     </div>
