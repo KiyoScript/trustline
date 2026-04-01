@@ -1,47 +1,101 @@
-# app/controllers/dashboard/productivities_controller.rb
 class Dashboard::ProductivitiesController < ApplicationController
   before_action :authenticate_user!
+
+  SCORING = {
+    leads_added:    1,
+    moved_forward:  2,
+    follow_up:      1,
+    call:           4,
+    email:          1,
+    linkedin:       1,
+    meeting:        3,
+    proposal_sent:  5,
+    deal_won:       10
+  }.freeze
 
   def index
     @period = params[:period] || "month"
 
-    @agents = case @period
-    when "week"  then week_data
-    when "month" then month_data
-    when "quarter" then quarter_data
-    else month_data
+    today = Date.today
+    @date_range = case @period
+    when "week"
+                    today.beginning_of_week..today.end_of_week
+    when "quarter"
+                    today.beginning_of_quarter..today.end_of_quarter
+    else # month
+                    today.beginning_of_month..today.end_of_month
     end
 
-    @top_producer = @agents.max_by { |a| a[:score] } if @agents.any?
+    users = current_user.can_view_all_leads? ? User.where(active_status: true).order(:full_name) : [ current_user ]
+
+    @agents = users.map { |user| build_agent_stats(user) }
+                   .sort_by { |a| -a[:score] }
+
+    @top_producer = @agents.first if @agents.any? && @agents.first[:score] > 0
   end
 
   private
 
-  def month_data
-    [
-      { name: "Demo User",      score: 50, added: 6,  removed: 1, net: 5,  fwd: 6, calls: 4, proposals: 1, won: 1, activities: 10 },
-      { name: "Taylor Brooks",  score: 25, added: 2,  removed: 0, net: 2,  fwd: 3, calls: 3, proposals: 1, won: 0, activities: 4  },
-      { name: "Jordan Mitchell", score: 23, added: 2,  removed: 1, net: 1,  fwd: 3, calls: 1, proposals: 0, won: 1, activities: 4  },
-      { name: "Cymon Trillana", score: 9,  added: 0,  removed: 0, net: 0,  fwd: 4, calls: 0, proposals: 0, won: 0, activities: 1  },
-      { name: "Alex Rivera",    score: 3,  added: 1,  removed: 0, net: 1,  fwd: 1, calls: 0, proposals: 0, won: 0, activities: 1  },
-      { name: "Casey Nguyen",   score: 1,  added: 1,  removed: 0, net: 1,  fwd: 0, calls: 0, proposals: 0, won: 0, activities: 1  },
-      { name: "Ken Enecio",     score: 0,  added: 0,  removed: 3, net: -3, fwd: 0, calls: 0, proposals: 0, won: 0, activities: 0  }
-    ]
-  end
+  def build_agent_stats(user)
+    # Leads added in period
+    leads_added = Lead.where(created_by: user, date_added: @date_range).count
 
-  def week_data
-    [] # No data for this week yet
-  end
+    # Leads moved forward in period
+    moved_forward = LeadMovementHistory
+                      .where(changed_by: user)
+                      .where(action_type: :moved_stage)
+                      .where("new_stage > previous_stage")
+                      .where(created_at: @date_range)
+                      .count
 
-  def quarter_data
-    [
-      { name: "Demo User",      score: 50, added: 6,  removed: 1, net: 5,  fwd: 6, calls: 4, proposals: 1, won: 1, activities: 10 },
-      { name: "Taylor Brooks",  score: 25, added: 2,  removed: 0, net: 2,  fwd: 3, calls: 3, proposals: 1, won: 0, activities: 4  },
-      { name: "Jordan Mitchell", score: 23, added: 2,  removed: 1, net: 1,  fwd: 3, calls: 1, proposals: 0, won: 1, activities: 4  },
-      { name: "Cymon Trillana", score: 9,  added: 0,  removed: 0, net: 0,  fwd: 4, calls: 0, proposals: 0, won: 0, activities: 1  },
-      { name: "Alex Rivera",    score: 3,  added: 1,  removed: 0, net: 1,  fwd: 1, calls: 0, proposals: 0, won: 0, activities: 1  },
-      { name: "Casey Nguyen",   score: 1,  added: 1,  removed: 0, net: 1,  fwd: 0, calls: 0, proposals: 0, won: 0, activities: 1  },
-      { name: "Ken Enecio",     score: 0,  added: 0,  removed: 3, net: -3, fwd: 0, calls: 0, proposals: 0, won: 0, activities: 0  }
-    ]
+    # Leads removed
+    leads_removed = Lead.where(last_updated_by: user, date_removed: @date_range).count
+
+    # Activities breakdown
+    activities = Activity.where(user: user, activity_date: @date_range)
+    calls           = activities.call.count
+    emails          = activities.email.count
+    linkedin_msgs   = activities.linkedin_message.count
+    meetings        = activities.meeting.count
+    proposals       = activities.proposal_sent.count
+    follow_ups      = activities.follow_up.count
+
+    # Won deals
+    deals_won = Lead.where(
+      last_updated_by: user,
+      status: :won,
+      date_removed: @date_range
+    ).count
+
+    # Net leads
+    net = leads_added - leads_removed
+
+    # Productivity score
+    score = (leads_added    * SCORING[:leads_added])   +
+            (moved_forward  * SCORING[:moved_forward]) +
+            (follow_ups     * SCORING[:follow_up])     +
+            (calls          * SCORING[:call])          +
+            (emails         * SCORING[:email])         +
+            (linkedin_msgs  * SCORING[:linkedin])      +
+            (meetings       * SCORING[:meeting])       +
+            (proposals      * SCORING[:proposal_sent]) +
+            (deals_won      * SCORING[:deal_won])
+
+    {
+      user:           user,
+      score:          score,
+      added:          leads_added,
+      removed:        leads_removed,
+      net:            net,
+      fwd:            moved_forward,
+      calls:          calls,
+      emails:         emails,
+      linkedin:       linkedin_msgs,
+      meetings:       meetings,
+      proposals:      proposals,
+      follow_ups:     follow_ups,
+      won:            deals_won,
+      activities:     calls + emails + linkedin_msgs + meetings + proposals + follow_ups
+    }
   end
 end

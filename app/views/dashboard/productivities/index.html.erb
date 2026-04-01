@@ -1,7 +1,10 @@
 <%# app/views/dashboard/productivities/index.html.erb %>
 
-<% rank_colors = { 1 => "bg-amber-400 text-amber-900", 2 => "bg-gray-300 text-gray-700", 3 => "bg-orange-400 text-orange-900" } %>
-<% bar_colors = ["#378ADD", "#1D9E75", "#7F77DD", "#BA7517", "#D85A30", "#0F6E56", "#A32D2D"] %>
+<% rank_colors = {
+  1 => "bg-amber-400 text-amber-900",
+  2 => "bg-gray-300 text-gray-700",
+  3 => "bg-orange-400 text-orange-900"
+} %>
 
 <div class="p-6 bg-base-200 min-h-screen">
 
@@ -9,7 +12,7 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-xl font-bold text-base-content">Productivity Dashboard</h1>
-      <p class="text-sm text-base-content/50 mt-0.5">Weekly performance by agent</p>
+      <p class="text-sm text-base-content/50 mt-0.5">Performance by agent</p>
     </div>
     <div class="flex gap-2">
       <%= link_to "This Week", dashboard_productivities_path(period: "week"),
@@ -26,14 +29,19 @@
     <div class="card bg-gradient-to-r from-blue-50 to-teal-50 border border-blue-100 mb-5">
       <div class="card-body p-5 flex-row items-center gap-4">
         <%= icon "trophy", library: "heroicons", class: "size-10 text-primary/40 shrink-0" %>
-        <div>
+        <div class="flex-1">
           <p class="text-xs text-base-content/50 uppercase tracking-wide font-medium mb-0.5">Top Producer</p>
-          <p class="text-xl font-bold text-base-content"><%= @top_producer[:name] %></p>
+          <p class="text-xl font-bold text-base-content"><%= @top_producer[:user].display_name %></p>
           <p class="text-sm text-base-content/60 mt-0.5">
             <%= @top_producer[:score] %> pts
             · <%= @top_producer[:added] %> added
             · <%= @top_producer[:fwd] %> moved forward
+            · <%= @top_producer[:activities] %> activities
           </p>
+        </div>
+        <div class="text-right">
+          <p class="text-3xl font-bold text-primary"><%= @top_producer[:score] %></p>
+          <p class="text-xs text-base-content/40">points</p>
         </div>
       </div>
     </div>
@@ -44,7 +52,7 @@
     <div class="card-body p-5">
       <h2 class="font-medium text-base-content mb-4">Agent Leaderboard</h2>
 
-      <% if @agents.empty? %>
+      <% if @agents.empty? || @agents.all? { |a| a[:score] == 0 } %>
         <div class="py-12 text-center text-base-content/30 text-sm">No data for this period</div>
       <% else %>
         <div class="overflow-x-auto">
@@ -77,7 +85,19 @@
                       <span class="text-sm text-base-content/30 pl-1"><%= rank %></span>
                     <% end %>
                   </td>
-                  <td class="py-3 text-sm font-medium text-base-content"><%= agent[:name] %></td>
+                  <td class="py-3">
+                    <div class="flex items-center gap-2">
+                      <div class="avatar avatar-placeholder">
+                        <div class="bg-primary/10 text-primary rounded-full size-8">
+                          <span class="text-xs font-bold"><%= agent[:user].initials %></span>
+                        </div>
+                      </div>
+                      <div>
+                        <p class="text-sm font-medium text-base-content"><%= agent[:user].display_name %></p>
+                        <p class="text-xs text-base-content/40 capitalize"><%= agent[:user].role.humanize %></p>
+                      </div>
+                    </div>
+                  </td>
                   <td class="py-3 text-center">
                     <span class="text-sm font-bold text-primary"><%= agent[:score] %></span>
                   </td>
@@ -100,8 +120,33 @@
     </div>
   </div>
 
+  <%# Scoring Legend %>
+  <div class="card bg-base-100 border border-base-300 mb-5">
+    <div class="card-body p-4">
+      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wide mb-3">Scoring Formula</p>
+      <div class="flex flex-wrap gap-3">
+        <% [
+          ["Lead Added",      "+1 pt"],
+          ["Moved Forward",   "+2 pts"],
+          ["Follow-up",       "+1 pt"],
+          ["Call",            "+4 pts"],
+          ["Email",           "+1 pt"],
+          ["LinkedIn",        "+1 pt"],
+          ["Meeting",         "+3 pts"],
+          ["Proposal Sent",   "+5 pts"],
+          ["Deal Won",        "+10 pts"],
+        ].each do |label, pts| %>
+          <div class="flex items-center gap-1.5 bg-base-200 rounded-lg px-3 py-1.5">
+            <span class="text-xs text-base-content/60"><%= label %></span>
+            <span class="text-xs font-bold text-primary"><%= pts %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
   <%# Productivity Score Chart %>
-  <% if @agents.any? %>
+  <% if @agents.any? && @agents.any? { |a| a[:score] > 0 } %>
     <div class="card bg-base-100 border border-base-300">
       <div class="card-body p-5">
         <h2 class="font-medium text-base-content mb-4">Productivity Score by Agent</h2>
@@ -114,20 +159,20 @@
 
 </div>
 
-<% if @agents.any? %>
+<% if @agents.any? && @agents.any? { |a| a[:score] > 0 } %>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <script>
-    const labels = <%= raw @agents.map { |a| a[:name].split(' ').first + ' ' + (a[:name].split(' ').last[0..2] rescue '') }.to_json %>;
+    const labels = <%= raw @agents.map { |a| a[:user].display_name.split.first }.to_json %>;
     const scores = <%= raw @agents.map { |a| a[:score] }.to_json %>;
-    const colors = <%= raw bar_colors.first(@agents.size).to_json %>;
+    const colors = ["#378ADD","#1D9E75","#7F77DD","#BA7517","#D85A30","#0F6E56","#A32D2D"];
 
-    new Chart(document.getElementById('productivityChart'), {
-      type: 'bar',
+    new Chart(document.getElementById("productivityChart"), {
+      type: "bar",
       data: {
         labels: labels,
         datasets: [{
           data: scores,
-          backgroundColor: colors,
+          backgroundColor: colors.slice(0, labels.length),
           borderRadius: 4,
           borderSkipped: false,
         }]
@@ -137,8 +182,12 @@
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          x: { grid: { display: false }, ticks: { color: '#888780', font: { size: 11 } } },
-          y: { grid: { color: 'rgba(136,135,128,0.12)' }, ticks: { color: '#888780', font: { size: 11 } }, beginAtZero: true }
+          x: { grid: { display: false }, ticks: { color: "#888780", font: { size: 11 } } },
+          y: {
+            grid: { color: "rgba(136,135,128,0.12)" },
+            ticks: { color: "#888780", font: { size: 11 }, stepSize: 1 },
+            beginAtZero: true
+          }
         }
       }
     });
