@@ -71,6 +71,6 @@ gem "rails_icons", "~> 1.8"
 
 gem "tailwindcss-rails", "~> 4.4"
 
-gem "pagy", "~> 43.4" # Omit the patch segment to avoid breaking changes
+gem "pagy", "~> 43.5" # Omit the patch segment to avoid breaking changes
 gem "ransack"
 gem "csv"
